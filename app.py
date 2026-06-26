@@ -5,7 +5,7 @@ import numpy as np
 import streamlit as st
 import plotly.express as px
 from datetime import datetime, timedelta
-from square.client import Client 
+import square  # <--- IMPORTACIÓN SIMPLE
 import re
 
 # ------------------------------------------------------------
@@ -24,7 +24,7 @@ st.set_page_config(
 try:
     from motor_kpis import procesar_periodo, validar_esquema_datos, BENCHMARK_SECTORES
 except ImportError:
-    st.error("❌ No se encuentra 'motor_kpis.py'.")
+    st.error("❌ No se encuentra 'motor_kpis.py'. Asegúrate de que el archivo está en la misma carpeta.")
     st.stop()
 
 # ------------------------------------------------------------
@@ -65,8 +65,8 @@ def obtener_token_square():
     if token and token != "tu_token_aqui":
         return token
     
-    st.error("❌ No se encontró el token de Square.")
-    st.info("ℹ️ Añade un secreto 'SQUARE_ACCESS_TOKEN' en Streamlit Cloud.")
+    st.error("❌ No se encontró el token de Square. Configúralo en 'Secrets' (Streamlit Cloud) o en un archivo .env (local).")
+    st.info("ℹ️ En Streamlit Cloud, añade un secreto llamado 'SQUARE_ACCESS_TOKEN' con el valor de tu token de sandbox.")
     return None
 
 def obtener_datos_square(fecha_inicio, fecha_fin):
@@ -75,10 +75,10 @@ def obtener_datos_square(fecha_inicio, fecha_fin):
         return pd.DataFrame(), "Token no configurado"
     
     try:
-        # Método alternativo de importación por si falla el cliente estándar
+        # Cliente de Square con importación simple
         client = square.Client(
             access_token=token,
-            environment="sandbox"
+            environment="sandbox"  # Cambiar a "production" si usas token real
         )
         
         start_str = fecha_inicio.strftime("%Y-%m-%dT00:00:00Z")
@@ -86,7 +86,7 @@ def obtener_datos_square(fecha_inicio, fecha_fin):
         
         with st.spinner("🔄 Obteniendo datos de Square..."):
             result = client.orders.list_orders(
-                location_id="main",
+                location_id="main",  # En sandbox funciona con cualquier ID
                 begin_time=start_str,
                 end_time=end_str,
                 limit=200
@@ -95,7 +95,7 @@ def obtener_datos_square(fecha_inicio, fecha_fin):
             orders = result.body.get('orders', [])
             
             if not orders:
-                st.warning("⚠️ No se encontraron órdenes.")
+                st.warning("⚠️ No se encontraron órdenes en el rango de fechas seleccionado.")
                 return generar_datos_demo(fecha_inicio, fecha_fin)
             
             datos = []
@@ -138,6 +138,7 @@ def obtener_datos_square(fecha_inicio, fecha_fin):
             return df, "Datos obtenidos correctamente"
             
     except Exception as e:
+        # Capturar cualquier error (incluyendo los de Square sin importar ApiException)
         st.error(f"❌ Error al obtener datos: {str(e)}")
         return generar_datos_demo(fecha_inicio, fecha_fin)
 
@@ -211,7 +212,7 @@ def generar_datos_demo(fecha_inicio, fecha_fin):
     return df, "Datos de demostración generados"
 
 # ------------------------------------------------------------
-# INTERFAZ PRINCIPAL
+# INTERFAZ PRINCIPAL DE STREAMLIT
 # ------------------------------------------------------------
 st.markdown("""
 # 📊 Retail Pulse – Analítica de Ventas en Tiempo Real
@@ -233,7 +234,7 @@ with st.sidebar:
     with col2:
         fecha_fin = st.date_input("Fecha fin", datetime.now().date())
     
-    if st.button("🔄 Sincronizar con Square", type="primary", use_container_width=True):
+    if st.button("🔄 Sincronizar con Square", type="primary", width='stretch'):
         with st.spinner("Obteniendo datos de Square..."):
             df, mensaje = obtener_datos_square(fecha_inicio, fecha_fin)
             if not df.empty:
@@ -245,7 +246,7 @@ with st.sidebar:
             else:
                 st.error(f"❌ {mensaje}")
     
-    if st.button("📊 Cargar datos de demostración", use_container_width=True):
+    if st.button("📊 Cargar datos de demostración", width='stretch'):
         df, mensaje = generar_datos_demo(fecha_inicio, fecha_fin)
         if not df.empty:
             st.session_state['df'] = df
@@ -261,7 +262,7 @@ with st.sidebar:
         st.warning("⚠️ No se encontró token de Square")
 
 # ------------------------------------------------------------
-# PROCESAMIENTO Y VISUALIZACIÓN
+# PROCESAMIENTO Y VISUALIZACIÓN DE DATOS
 # ------------------------------------------------------------
 if 'df' in st.session_state and not st.session_state['df'].empty:
     df = st.session_state['df']
