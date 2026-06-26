@@ -36,6 +36,154 @@ st.set_page_config(
 )
 
 # ------------------------------------------------------------
+# CSS PARA EL MODAL
+# ------------------------------------------------------------
+st.markdown("""
+<style>
+    /* Fondo del modal (overlay) */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.7);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    /* Contenido del modal */
+    .modal-content {
+        background: #111827;
+        color: #f8fafc;
+        border: 1px solid #1e293b;
+        border-radius: 16px;
+        max-width: 900px;
+        width: 100%;
+        max-height: 85vh;
+        overflow-y: auto;
+        padding: 2rem 2rem 1.5rem 2rem;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+        font-family: 'Georgia', 'Cardo', serif;
+        position: relative;
+    }
+    .modal-content h2 {
+        color: #f59e0b;
+        text-align: center;
+        font-size: 1.8rem;
+        border-bottom: 2px solid #f59e0b33;
+        padding-bottom: 0.8rem;
+        margin-bottom: 1.5rem;
+    }
+    .modal-content h3 {
+        color: #38bdf8;
+        font-size: 1.2rem;
+        margin-top: 1.8rem;
+        border-left: 4px solid #38bdf8;
+        padding-left: 0.8rem;
+    }
+    .modal-content .badge {
+        display: inline-block;
+        background: #1e293b;
+        color: #94a3b8;
+        font-size: 0.65rem;
+        padding: 0.1rem 0.6rem;
+        border-radius: 12px;
+        border: 1px solid #334155;
+        margin-left: 0.5rem;
+    }
+    .modal-content .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 0.8rem;
+        margin: 1rem 0;
+    }
+    .modal-content .metric-card {
+        background: #0f172a;
+        border: 1px solid #1e293b;
+        border-radius: 10px;
+        padding: 0.8rem 1rem;
+    }
+    .modal-content .metric-card:hover {
+        border-color: #f59e0b;
+        background: #1a2332;
+    }
+    .modal-content .metric-name {
+        font-weight: 700;
+        color: #f8fafc;
+        font-size: 0.95rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .modal-content .metric-def {
+        color: #94a3b8;
+        font-size: 0.8rem;
+        margin: 0.2rem 0;
+    }
+    .modal-content .metric-util {
+        color: #a5b4fc;
+        font-size: 0.75rem;
+        border-top: 1px solid #1e293b;
+        padding-top: 0.3rem;
+        margin-top: 0.3rem;
+    }
+    .modal-content .close-btn {
+        background: #f59e0b;
+        color: #0b0f19;
+        font-weight: bold;
+        border: none;
+        padding: 0.6rem 2rem;
+        border-radius: 30px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        margin-top: 1.5rem;
+        display: inline-block;
+    }
+    .modal-content .close-btn:hover {
+        background: #d97706;
+    }
+    .modal-content .footer-note {
+        color: #64748b;
+        font-size: 0.8rem;
+        text-align: center;
+        margin-top: 2rem;
+        border-top: 1px solid #1e293b;
+        padding-top: 1.2rem;
+    }
+    .btn-metricas {
+        background: #f59e0b;
+        color: #0b0f19;
+        padding: 0.4rem 1.2rem;
+        border-radius: 30px;
+        font-weight: bold;
+        font-size: 0.85rem;
+        border: none;
+        cursor: pointer;
+        transition: background 0.2s;
+        display: inline-block;
+    }
+    .btn-metricas:hover {
+        background: #d97706;
+    }
+    /* Scrollbar */
+    .modal-content::-webkit-scrollbar {
+        width: 6px;
+    }
+    .modal-content::-webkit-scrollbar-track {
+        background: #1e293b;
+        border-radius: 10px;
+    }
+    .modal-content::-webkit-scrollbar-thumb {
+        background: #f59e0b;
+        border-radius: 10px;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# ------------------------------------------------------------
 # FUNCIONES AUXILIARES
 # ------------------------------------------------------------
 def convertir_fechas(df):
@@ -62,25 +210,18 @@ def limpiar_numero(valor):
 # ADAPTADOR DE SQUARE (CONEXIÓN SILENCIOSA)
 # ------------------------------------------------------------
 def obtener_token_square():
-    """Obtiene el token de Square desde los secretos de Streamlit o variables de entorno."""
     try:
         token = st.secrets["SQUARE_ACCESS_TOKEN"]
         if token and token != "tu_token_aqui":
             return token
     except:
         pass
-    
     token = os.getenv("SQUARE_ACCESS_TOKEN")
     if token and token != "tu_token_aqui":
         return token
-    
-    return None  # Silenciosamente
+    return None
 
 def obtener_datos_square(fecha_inicio, fecha_fin):
-    """
-    Obtiene órdenes de Square en el rango de fechas.
-    Si falla, genera datos de demostración silenciosamente.
-    """
     token = obtener_token_square()
     if not token:
         return generar_datos_demo(fecha_inicio, fecha_fin)
@@ -90,7 +231,6 @@ def obtener_datos_square(fecha_inicio, fecha_fin):
             access_token=token,
             environment="sandbox"
         )
-        
         start_str = fecha_inicio.strftime("%Y-%m-%dT00:00:00Z")
         end_str = fecha_fin.strftime("%Y-%m-%dT23:59:59Z")
         
@@ -101,9 +241,7 @@ def obtener_datos_square(fecha_inicio, fecha_fin):
                 end_time=end_str,
                 limit=200
             )
-            
             orders = result.body.get('orders', [])
-            
             if not orders:
                 return generar_datos_demo(fecha_inicio, fecha_fin)
             
@@ -143,20 +281,14 @@ def obtener_datos_square(fecha_inicio, fecha_fin):
             df = pd.DataFrame(datos)
             if df.empty:
                 return generar_datos_demo(fecha_inicio, fecha_fin)
-            
             return df, "Datos obtenidos correctamente desde Square"
             
     except Exception as e:
-        # Silenciosamente usa datos de demostración
         return generar_datos_demo(fecha_inicio, fecha_fin)
 
 def generar_datos_demo(fecha_inicio, fecha_fin):
-    """
-    Genera datos de demostración realistas.
-    """
     vendedores = ["Vendedor_1 (Junior)", "Vendedor_2 (Senior)", "Vendedor_3 (Cajero)", "Vendedor_4 (Asesor)", "Vendedor_5 (Practicante)"]
     datos = []
-    
     dias = (fecha_fin - fecha_inicio).days + 1
     np.random.seed(42)
     
@@ -186,20 +318,15 @@ def generar_datos_demo(fecha_inicio, fecha_fin):
             
             for v in vendedores_turno:
                 if "Asesor" in v:
-                    aov_base = 48
-                    u_base = 2.9
+                    aov_base = 48; u_base = 2.9
                 elif "Senior" in v:
-                    aov_base = 36
-                    u_base = 2.2
+                    aov_base = 36; u_base = 2.2
                 elif "Cajero" in v:
-                    aov_base = 22
-                    u_base = 1.2
+                    aov_base = 22; u_base = 1.2
                 elif "Practicante" in v:
-                    aov_base = 18
-                    u_base = 1.1
+                    aov_base = 18; u_base = 1.1
                 else:
-                    aov_base = 20
-                    u_base = 1.3
+                    aov_base = 20; u_base = 1.3
                 
                 trans = max(1, int(trans_por_v * np.random.uniform(0.7, 1.3)))
                 ventas = round(trans * aov_base * np.random.uniform(0.9, 1.1), 2)
@@ -280,12 +407,157 @@ def generar_pdf_simple(resultado, fecha_inicio, fecha_fin, cliente="Demo"):
         return None
 
 # ------------------------------------------------------------
+# FUNCIÓN PARA GENERAR EL CONTENIDO DEL MODAL (INFOGRAFÍA)
+# ------------------------------------------------------------
+def get_metricas_html():
+    return """
+    <h2>📊 MODELO DE ANÁLISIS AVANZADO</h2>
+    <p style="text-align:center; color:#94a3b8; font-size:1.05rem;">
+        Retail Pulse v1.0 · Arquitectura modular y versátil
+    </p>
+    
+    <div style="background:#1a2332; border-left:6px solid #f59e0b; padding:1rem 1.5rem; border-radius:10px; margin:1.5rem 0;">
+        <p><strong>⚡ Versatilidad del modelo</strong></p>
+        <p style="color:#d1d5db; font-size:0.95rem;">
+            Este motor de análisis está diseñado para adaptarse a <strong>cualquier sector retail, tipo de negocio o departamento</strong> (ventas, RRHH, operaciones, etc.).
+            Se puede personalizar mediante la selección de <strong>benchmarks sectoriales</strong> y la configuración de <strong>parámetros propios</strong>.
+            Es aplicable a tiendas físicas, e-commerce, equipos comerciales, y cualquier entorno donde se quiera medir la eficiencia y productividad de la fuerza de ventas.
+        </p>
+    </div>
+    
+    <h3>📋 Estructura del Informe Generado</h3>
+    <ul style="color:#d1d5db; font-size:0.95rem; line-height:1.6; list-style-type:decimal; padding-left:1.5rem;">
+        <li><strong>Portada</strong> – Título, cliente, período analizado.</li>
+        <li><strong>Resumen Global</strong> – Tabla con KPIs principales + comentario automático.</li>
+        <li><strong>Dictamen Individualizado por Vendedor</strong> – Lista de cada vendedor con métricas clave y recomendación. Incluye leyenda de perfiles.</li>
+        <li><strong>Informe Ejecutivo</strong> (narrativa personalizada):
+            <ul>
+                <li>3.1. Visión Global de la Tienda</li>
+                <li>3.2. Análisis de la Matriz de Calor y Patrones de Demanda</li>
+                <li>3.3. Rendimiento Individual por Vendedor (con apodos y comentarios)</li>
+                <li>3.4. Ineficiencia y Oportunidad Perdida</li>
+                <li>3.5. Gestión de Stock y Devoluciones</li>
+                <li>3.6. Benchmarking Sectorial (Nacional y, opcional, Regional)</li>
+                <li>3.7. Conclusiones Estratégicas y Plan de Acción</li>
+                <li>3.8. Proyección de Mejora</li>
+            </ul>
+        </li>
+        <li><strong>Contexto Regional</strong> (opcional) – Datos del entorno geográfico, marco laboral, digitalización, etc.</li>
+        <li><strong>Anexo: Gráficos</strong> – Barras VPH, evolución diaria, torta de distribución de ventas.</li>
+    </ul>
+
+    <h3>📈 Métricas Empleadas (Definición y Utilidad)</h3>
+    <p style="color:#94a3b8;">Todas las métricas que se calculan y presentan en el informe, agrupadas por categorías.</p>
+    
+    <h4>🌐 Métricas Globales</h4>
+    <div class="metric-grid">
+        <div class="metric-card"><div class="metric-name">Ventas Totales <span class="badge">Volumen</span></div><div class="metric-def">Facturación bruta acumulada.</div><div class="metric-util">🔹 Indica el tamaño del negocio.</div></div>
+        <div class="metric-card"><div class="metric-name">Transacciones <span class="badge">Actividad</span></div><div class="metric-def">Número de tickets/recibos emitidos.</div><div class="metric-util">🔹 Mide el volumen de operaciones.</div></div>
+        <div class="metric-card"><div class="metric-name">Tráfico Total <span class="badge">Afluencia</span></div><div class="metric-def">Número de visitas o pases registrados.</div><div class="metric-util">🔹 Base para calcular la conversión.</div></div>
+        <div class="metric-card"><div class="metric-name">Tasa de Conversión <span class="badge">Eficacia</span></div><div class="metric-def">(Transacciones / Tráfico) × 100.</div><div class="metric-util">🔹 Porcentaje de visitantes que compran.</div></div>
+        <div class="metric-card"><div class="metric-name">VPH <span class="badge">Productividad</span></div><div class="metric-def">Ventas totales / Horas trabajadas.</div><div class="metric-util">🔹 KPI principal de productividad laboral.</div></div>
+        <div class="metric-card"><div class="metric-name">AOV <span class="badge">Valor</span></div><div class="metric-def">Ventas totales / Transacciones.</div><div class="metric-util">🔹 Gasto promedio por compra.</div></div>
+        <div class="metric-card"><div class="metric-name">UPT <span class="badge">Cesta</span></div><div class="metric-def">Unidades totales / Transacciones.</div><div class="metric-util">🔹 Artículos por ticket (cross-selling).</div></div>
+        <div class="metric-card"><div class="metric-name">Coste Laboral % <span class="badge">Eficiencia</span></div><div class="metric-def">(Coste salarial / Ventas) × 100.</div><div class="metric-util">🔹 Peso de los salarios sobre la facturación.</div></div>
+        <div class="metric-card"><div class="metric-name">Impacto Ineficiencia <span class="badge">Fuga</span></div><div class="metric-def">(Idle Cost + COP) / Ventas × 100.</div><div class="metric-util">🔹 Ventas perdidas por mala gestión.</div></div>
+        <div class="metric-card"><div class="metric-name">Coste de Oportunidad <span class="badge">Pérdida</span></div><div class="metric-def">Clientes perdidos × AOV × Margen.</div><div class="metric-util">🔹 Ventas potenciales no realizadas en picos.</div></div>
+        <div class="metric-card"><div class="metric-name">Coste de Ocio <span class="badge">Sobrepersonal</span></div><div class="metric-def">Gasto salarial en horas de baja afluencia.</div><div class="metric-util">🔹 Indica exceso de personal en momentos de poco tráfico.</div></div>
+        <div class="metric-card"><div class="metric-name">Clientes Perdidos <span class="badge">Oportunidad</span></div><div class="metric-def">Estimación de clientes que no compraron en picos.</div><div class="metric-util">🔹 Cuantifica la pérdida real de negocio.</div></div>
+        <div class="metric-card"><div class="metric-name">Ratio Staff-Tráfico <span class="badge">Cobertura</span></div><div class="metric-def">Tráfico en picos / Horas trabajadas en picos.</div><div class="metric-util">🔹 Clientes por empleado en horas punta.</div></div>
+        <div class="metric-card"><div class="metric-name">Déficit de horas en picos <span class="badge">Staffing</span></div><div class="metric-def">(Tráfico pico / Traf_opt_empleado) - Horas pico reales.</div><div class="metric-util">🔹 Horas de personal que faltaron para cubrir la demanda.</div></div>
+        <div class="metric-card"><div class="metric-name">Margen Bruto aplicado <span class="badge">COP</span></div><div class="metric-def">Porcentaje de margen usado para calcular el COP.</div><div class="metric-util">🔹 Ajustable por el usuario.</div></div>
+        <div class="metric-card"><div class="metric-name">Rotación de Stock <span class="badge">Inventario</span></div><div class="metric-def">Ventas (€) / Stock promedio (unidades).</div><div class="metric-util">🔹 Frecuencia de renovación del inventario en valor.</div></div>
+    </div>
+
+    <h4>👤 Métricas por Vendedor</h4>
+    <div class="metric-grid">
+        <div class="metric-card"><div class="metric-name">VPH individual <span class="badge">Productividad</span></div><div class="metric-def">Ventas del vendedor / Horas del vendedor.</div><div class="metric-util">🔹 Compara productividad individual.</div></div>
+        <div class="metric-card"><div class="metric-name">AOV individual <span class="badge">Valor</span></div><div class="metric-def">Ventas / Transacciones del vendedor.</div><div class="metric-util">🔹 Capacidad de generar tickets de alto valor.</div></div>
+        <div class="metric-card"><div class="metric-name">UPT individual <span class="badge">Cesta</span></div><div class="metric-def">Unidades / Transacciones del vendedor.</div><div class="metric-util">🔹 Habilidad de venta cruzada.</div></div>
+        <div class="metric-card"><div class="metric-name">Venta Neta <span class="badge">Real</span></div><div class="metric-def">Ventas brutas - Devoluciones.</div><div class="metric-util">🔹 Ingreso real después de devoluciones.</div></div>
+        <div class="metric-card"><div class="metric-name">Tasa de Retorno <span class="badge">Calidad</span></div><div class="metric-def">(Devoluciones / Ventas) × 100.</div><div class="metric-util">🔹 Porcentaje de productos devueltos.</div></div>
+        <div class="metric-card"><div class="metric-name">REP % <span class="badge">Eficiencia salarial</span></div><div class="metric-def">(Coste salarial / Ventas) × 100.</div><div class="metric-util">🔹 Peso del salario sobre su facturación.</div></div>
+        <div class="metric-card"><div class="metric-name">Sell-through <span class="badge">Rotación</span></div><div class="metric-def">(Unidades vendidas / Stock promedio) × 100.</div><div class="metric-util">🔹 Capacidad de mover inventario.</div></div>
+        <div class="metric-card"><div class="metric-name">Stress Ratio <span class="badge">Comportamiento</span></div><div class="metric-def">VPH en picos / VPH en valles.</div><div class="metric-util">🔹 Resiliencia bajo presión (>1,05 mejora; <0,85 colapsa).</div></div>
+        <div class="metric-card"><div class="metric-name">Fidelización <span class="badge">Lealtad</span></div><div class="metric-def">(Tickets socio / Transacciones) × 100.</div><div class="metric-util">🔹 Porcentaje de clientes recurrentes.</div></div>
+        <div class="metric-card"><div class="metric-name">Horas en Pico/Valle <span class="badge">Contexto</span></div><div class="metric-def">Distribución de horas en alta/baja afluencia.</div><div class="metric-util">🔹 Contextualiza el rendimiento.</div></div>
+        <div class="metric-card"><div class="metric-name">Peso Operativo <span class="badge">Carga</span></div><div class="metric-def">(Horas del vendedor / Horas totales) × 100.</div><div class="metric-util">🔹 Proporción de horas que aporta al equipo.</div></div>
+        <div class="metric-card"><div class="metric-name">Cuadrante Comercial <span class="badge">Perfil</span></div><div class="metric-def">Clasificación automática (ASESOR TOP, DESPACHADOR, etc.).</div><div class="metric-util">🔹 Resume perfil y sugiere acciones formativas.</div></div>
+    </div>
+
+    <h4>📊 Benchmarking y Contexto Sectorial</h4>
+    <div class="metric-grid">
+        <div class="metric-card"><div class="metric-name">Benchmark Conversión <span class="badge">Sector</span></div><div class="metric-def">Conversión objetivo del sector (percentil 50).</div><div class="metric-util">🔹 Referencia para comparar.</div></div>
+        <div class="metric-card"><div class="metric-name">Benchmark AOV <span class="badge">Sector</span></div><div class="metric-def">Ticket medio objetivo del sector.</div><div class="metric-util">🔹 Referencia para evaluar ticket medio.</div></div>
+        <div class="metric-card"><div class="metric-name">Benchmark UPT <span class="badge">Sector</span></div><div class="metric-def">Unidades por ticket objetivo del sector.</div><div class="metric-util">🔹 Referencia para evaluar venta cruzada.</div></div>
+        <div class="metric-card"><div class="metric-name">Tráfico Óptimo/Empleado <span class="badge">Sector</span></div><div class="metric-def">Clientes que un empleado puede atender eficientemente.</div><div class="metric-util">🔹 Base para calcular déficit de horas.</div></div>
+        <div class="metric-card"><div class="metric-name">Diferencia vs Benchmark <span class="badge">Desviación</span></div><div class="metric-def">Desviación de la tienda respecto al sector.</div><div class="metric-util">🔹 Indica posición competitiva.</div></div>
+    </div>
+
+    <h4>📦 Stock y Devoluciones</h4>
+    <div class="metric-grid">
+        <div class="metric-card"><div class="metric-name">Devoluciones Totales <span class="badge">Calidad</span></div><div class="metric-def">Número total de productos devueltos.</div><div class="metric-util">🔹 Indicador de calidad y satisfacción.</div></div>
+        <div class="metric-card"><div class="metric-name">Stock Promedio <span class="badge">Inventario</span></div><div class="metric-def">Media de unidades de stock disponible.</div><div class="metric-util">🔹 Dimensiona el inventario.</div></div>
+        <div class="metric-card"><div class="metric-name">Antigüedad Media del Stock <span class="badge">Rotación</span></div><div class="metric-def">Edad media (en meses) del inventario.</div><div class="metric-util">🔹 Si es elevada, indica productos de lenta rotación.</div></div>
+    </div>
+
+    <div style="margin-top:1.5rem; background:#0f172a; border-radius:12px; padding:1rem; border:1px solid #1e293b;">
+        <p style="color:#d1d5db; text-align:center; font-size:0.9rem;">
+            El sistema calcula y presenta <strong>más de 40 métricas</strong> agrupadas en estas categorías. 
+            Todas ellas se utilizan en el informe para ofrecer un análisis completo y accionable de la fuerza de ventas.
+        </p>
+    </div>
+    <div style="text-align:center; margin-top:1.5rem;">
+        <button class="close-btn" onclick="parent.document.querySelector('.modal-overlay').style.display='none'">✕ Cerrar</button>
+    </div>
+    <div class="footer-note">
+        Este modelo es parte de la suite Retail Pulse · Desarrollado para ofrecer análisis profundos y accionables en el sector retail.
+    </div>
+    """
+
+# ------------------------------------------------------------
 # INTERFAZ PRINCIPAL DE STREAMLIT
 # ------------------------------------------------------------
-st.markdown("""
-# 📊 Retail Pulse – Analítica de Ventas en Tiempo Real
-_Demo interactiva con conexión a Square Sandbox_
-""")
+
+# Título y botón de métricas (en la misma fila)
+col_titulo, col_boton = st.columns([4, 1])
+with col_titulo:
+    st.markdown("""
+    # 📊 Retail Pulse – Analítica de Ventas en Tiempo Real
+    _Demo interactiva con conexión a Square Sandbox · Datos actualizados al instante_
+    """)
+with col_boton:
+    # Botón para abrir el modal
+    if st.button("📊 Ver modelo y métricas", key="btn_metricas"):
+        st.session_state['show_modal'] = True
+
+# Mostrar el modal si la variable de sesión está activa
+if st.session_state.get('show_modal', False):
+    # Inyectamos el HTML del modal con un overlay
+    st.markdown(f"""
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal-content">
+            {get_metricas_html()}
+        </div>
+    </div>
+    <script>
+        // Cerrar el modal al hacer clic fuera del contenido
+        document.getElementById('modal-overlay').addEventListener('click', function(e) {{
+            if (e.target === this) {{
+                this.style.display = 'none';
+                // También debemos resetear la variable de sesión en Streamlit
+                // Para ello, redirigimos a la misma página con un parámetro
+                window.location.href = window.location.pathname + '?close_modal=true';
+            }}
+        }});
+        // Si la URL tiene ?close_modal=true, recargamos sin el parámetro
+        if (window.location.search.includes('close_modal=true')) {{
+            window.location.href = window.location.pathname;
+        }}
+    </script>
+    """, unsafe_allow_html=True)
+    # Resetear la variable de sesión para que no se muestre al recargar
+    # (se hará con el script de redirección)
 
 # Sidebar: Configuración
 with st.sidebar:
@@ -324,7 +596,6 @@ with st.sidebar:
             st.session_state['fecha_fin'] = fecha_fin
             st.success(f"✅ {mensaje} ({len(df)} registros)")
     
-    # Mostrar estado del token (sin molestar)
     token = obtener_token_square()
     if token:
         st.success("✅ Token de Square configurado")
@@ -334,7 +605,6 @@ with st.sidebar:
 # ------------------------------------------------------------
 # PROCESAMIENTO Y VISUALIZACIÓN DE DATOS
 # ------------------------------------------------------------
-# Si no hay datos en sesión, cargar automáticamente datos de demostración
 if 'df' not in st.session_state:
     fecha_inicio_def = datetime.now().date() - timedelta(days=7)
     fecha_fin_def = datetime.now().date()
@@ -350,12 +620,8 @@ if 'df' in st.session_state and not st.session_state['df'].empty:
     fecha_inicio = st.session_state.get('fecha_inicio', datetime.now().date() - timedelta(days=7))
     fecha_fin = st.session_state.get('fecha_fin', datetime.now().date())
     
-    # Procesar datos con el motor de KPIs
     resultado = procesar_periodo(df, "PERIODO COMPLETO", sector_key=sector_key)
     
-    # ------------------------------------------------------------
-    # FILA 1: KPIs principales
-    # ------------------------------------------------------------
     st.subheader("📈 KPIs Principales")
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -377,9 +643,6 @@ if 'df' in st.session_state and not st.session_state['df'].empty:
     with col8:
         st.metric("⚠️ Impacto Ineficiencia", f"{resultado.get('impacto_pct', '0')}%")
     
-    # ------------------------------------------------------------
-    # FILA 2: Gráfico de VPH por Vendedor
-    # ------------------------------------------------------------
     st.subheader("⚡ Productividad por Vendedor")
     vendedores = resultado.get('vendedores', [])
     if vendedores:
@@ -398,7 +661,6 @@ if 'df' in st.session_state and not st.session_state['df'].empty:
             title="VPH por Vendedor (€/h)",
             text_auto=".1f"
         )
-        
         media_vph = float(resultado.get('vph_global', 0))
         fig.add_hline(
             y=media_vph,
@@ -407,22 +669,11 @@ if 'df' in st.session_state and not st.session_state['df'].empty:
             annotation_text=f"Media: {media_vph:.1f} €/h",
             annotation_position="top right"
         )
-        
-        fig.update_layout(
-            height=400,
-            xaxis_title="",
-            yaxis_title="VPH (€/h)",
-            showlegend=True,
-            legend_title="Cuadrante"
-        )
-        
+        fig.update_layout(height=400, xaxis_title="", yaxis_title="VPH (€/h)", showlegend=True, legend_title="Cuadrante")
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.info("ℹ️ No hay datos de vendedores disponibles.")
     
-    # ------------------------------------------------------------
-    # FILA 3: Dictamen de Vendedores
-    # ------------------------------------------------------------
     with st.expander("👤 Dictamen de Vendedores (clic para desplegar)", expanded=False):
         if vendedores:
             for v in vendedores:
@@ -436,15 +687,9 @@ if 'df' in st.session_state and not st.session_state['df'].empty:
         else:
             st.info("ℹ️ No hay dictamen disponible.")
     
-    # ------------------------------------------------------------
-    # FILA 4: Tabla de datos en bruto
-    # ------------------------------------------------------------
     with st.expander("📋 Ver datos en bruto (DataFrame)", expanded=False):
         st.dataframe(df)
     
-    # ------------------------------------------------------------
-    # FILA 5: Descarga de PDF
-    # ------------------------------------------------------------
     col1, col2, col3 = st.columns([1, 1, 2])
     with col1:
         nombre_cliente = st.text_input("Nombre del cliente", value="Demo")
@@ -458,12 +703,19 @@ if 'df' in st.session_state and not st.session_state['df'].empty:
                     file_name=f"Retail_Pulse_{datetime.now().strftime('%Y%m%d')}.pdf",
                     mime="application/pdf"
                 )
-
 else:
     st.info("ℹ️ No hay datos cargados. Usa el panel de la izquierda para sincronizar con Square o cargar datos de demostración.")
 
 # ------------------------------------------------------------
-# FOOTER
+# FOOTER (actualizado)
 # ------------------------------------------------------------
 st.markdown("---")
-st.caption("Desarrollado con ❤️ · Demo interactiva con Square Sandbox")
+st.markdown(
+    """
+    <div style="text-align: center; color: #94a3b8; font-size: 0.9rem;">
+        Desarrollado por <strong style="color: #f8fafc;">Jose Luis Asenjo</strong> · 
+        <a href="mailto:asenjo.jose@hotmail.com" style="color: #94a3b8; text-decoration: none;">asenjo.jose@hotmail.com</a>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
