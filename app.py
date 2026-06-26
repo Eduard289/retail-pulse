@@ -303,7 +303,7 @@ with st.sidebar:
     with col2:
         fecha_fin = st.date_input("Fecha fin", datetime.now().date())
     
-    if st.button("🔄 Sincronizar con Square", type="primary", width='stretch'):
+    if st.button("🔄 Sincronizar con Square", type="primary", use_container_width=True):
         with st.spinner("Obteniendo datos de Square..."):
             df, mensaje = obtener_datos_square(fecha_inicio, fecha_fin)
             if not df.empty:
@@ -315,7 +315,7 @@ with st.sidebar:
             else:
                 st.error(f"❌ {mensaje}")
     
-    if st.button("📊 Cargar datos de demostración", width='stretch'):
+    if st.button("📊 Cargar datos de demostración", use_container_width=True):
         df, mensaje = generar_datos_demo(fecha_inicio, fecha_fin)
         if not df.empty:
             st.session_state['df'] = df
@@ -463,7 +463,91 @@ else:
     st.info("ℹ️ No hay datos cargados. Usa el panel de la izquierda para sincronizar con Square o cargar datos de demostración.")
 
 # ------------------------------------------------------------
-# FOOTER
+# FILA 6: Auditoría KPIs (Glosario e Información del Modelo)
+# ------------------------------------------------------------
+with st.expander("ℹ️ Información KPIs / Auditoría KPIs (clic para consultar modelo completo)", expanded=False):
+    st.markdown("""
+    ### 📊 Arquitectura del Modelo: Retail Pulse v1.0
+    Este motor analítico modular está diseñado para auditar la fuerza de ventas en tiempo real, adaptándose a cualquier departamento o sector retail. Combina transacciones brutas con datos de afluencia para revelar fugas de rentabilidad ocultas tras el volumen de facturación.
+    """)
+    
+    tab1, tab2, tab3, tab4 = st.tabs(["🌐 Métricas Globales", "👤 Métricas de Vendedor", "📊 Benchmarking", "📦 Inventario y Calidad"])
+    
+    with tab1:
+        st.markdown("#### Indicadores de Negocio y Flujo General")
+        col_g1, col_g2 = st.columns(2)
+        with col_g1:
+            st.markdown("""
+            * **Ventas Totales:** Facturación bruta acumulada. Indica el tamaño financiero de la operación.
+            * **Transacciones:** Número de tickets o recibos emitidos. Mide el volumen real de paso por caja.
+            * **Tráfico Total:** Conteo absoluto de visitantes entrantes. Sirve de base matemática para la conversión.
+            * **Tasa de Conversión (%):** `(Transacciones / Tráfico) × 100`. Porcentaje de visitantes que acaban comprando.
+            * **VPH (Ventas Por Hora):** `Ventas Totales / Horas Trabajadas`. KPI principal de productividad laboral.
+            * **AOV (Ticket Medio):** `Ventas Totales / Transacciones`. Gasto promedio generado en cada compra.
+            * **UPT (Unidades por Ticket):** `Unidades Totales / Transacciones`. Mide la venta cruzada o tamaño de la cesta.
+            * **Coste Laboral (%):** `(Coste Salarial / Ventas) × 100`. Peso porcentual de las nóminas sobre la facturación.
+            """)
+        with col_g2:
+            st.markdown("""
+            * **Impacto de Ineficiencia (%):** `(Coste de Ocio + Coste Oportunidad) / Ventas × 100`. Capital evaporado por mala gestión del turno.
+            * **Coste de Oportunidad (COP):** `Clientes Perdidos × AOV × Margen Bruto`. Facturación potencial perdida por falta de staff en picos de tráfico.
+            * **Coste de Ocio (Idle Cost):** Gasto salarial consumido durante horas valle con exceso de personal inactivo.
+            * **Clientes Perdidos:** Estimación matemática de compradores que abandonaron la tienda sin comprar debido a colas o falta de atención en picos.
+            * **Ratio Staff-Tráfico:** `Tráfico en Picos / Horas Trabajadas en Picos`. Nivel de saturación comercial por empleado.
+            * **Déficit de Horas en Picos:** Horas de personal de ventas que faltaron para cubrir la demanda óptima del turno.
+            * **Margen Bruto Aplicado:** Porcentaje de margen neto utilizado por el sistema para calcular el impacto financiero real del COP.
+            * **Rotación de Stock (€):** `Ventas (€) / Stock Promedio Valorizado`. Frecuencia financiera de renovación de las existencias.
+            """)
+            
+    with tab2:
+        st.markdown("#### Evaluación y Perfilado Individual")
+        col_v1, col_v2 = st.columns(2)
+        with col_v1:
+            st.markdown("""
+            * **VPH Individual:** `Ventas Propias / Horas Propias`. Eficiencia productiva directa de cada empleado frente al estándar.
+            * **AOV Individual:** Capacidad del asesor para derivar clientes hacia productos de mayor valor (*Up-selling*).
+            * **UPT Individual:** Habilidad comercial del vendedor para añadir artículos complementarios a la venta principal (*Cross-selling*).
+            * **Venta Neta:** `Ventas Brutas - Devoluciones directas imputadas`. Aporte económico consolidado real a la empresa.
+            * **Tasa de Retorno (%):** `(Devoluciones / Ventas del asesor) × 100`. Indicador crítico de calidad, asesoramiento erróneo o insatisfacción.
+            * **REP (%):** Rentabilidad Salarial Propia. Proporción exacta que representa el sueldo del trabajador sobre las ventas que genera.
+            """)
+        with col_v2:
+            st.markdown("""
+            * **Sell-Through Individual:** Porcentaje del inventario asignado o gestionado por el vendedor que logra transformar en ventas.
+            * **Stress Ratio:** `VPH en Horas Pico / VPH en Horas Valle`. Mide la resiliencia mental: valores `>1.05` indican crecimiento bajo presión; `<0.85` indican colapso por saturación.
+            * **Fidelización (%):** Porcentaje de ventas vinculadas a cuentas de cliente o programas de lealtad gestionadas por el empleado.
+            * **Horas en Pico vs Valle:** Distribución porcentual del tiempo trabajado según la saturación comercial de la tienda para aportar contexto al rendimiento.
+            * **Peso Operativo (%):** Proporción del total de horas del equipo que asume el trabajador.
+            * **Cuadrante Comercial:** Perfilado algorítmico automático (*Asesor Top, Despachador, En Desarrollo, Ineficiente*) con su respectivo dictamen estratégico.
+            """)
+            
+    with tab3:
+        st.markdown("#### Estándares de Mercado y Competitividad")
+        st.markdown("""
+        * **Benchmark Conversión:** Objetivo estándar de conversión del sector seleccionado (percentil 50 de la industria).
+        * **Benchmark AOV:** Ticket medio de referencia en el mercado competitivo directo.
+        * **Benchmark UPT:** Tamaño medio de la cesta comercial de referencia para el nicho seleccionado.
+        * **Tráfico Óptimo por Empleado:** Umbral máximo de clientes por hora que un único trabajador puede atender garantizando la conversión objetivo.
+        * **Desviación vs Benchmark (Δ):** Brecha matemática porcentual entre el rendimiento actual de la tienda y el estándar competitivo del sector.
+        """)
+        
+    with tab4:
+        st.markdown("#### Operaciones, Logística y Almacén")
+        st.markdown("""
+        * **Devoluciones Totales:** Conteo absoluto de incidencias de retorno. Termómetro general de expectativas del cliente y tara de producto.
+        * **Stock Promedio (Unidades):** Volumen medio de artículos físicos inmobilizados en sala de ventas y almacén.
+        * **Antigüedad Media del Stock:** Edad promedio del inventario expresada en meses. Picos elevados advierten de mercancía obsoleta de lenta rotación (*Dead Stock*).
+        """)
+        
+    st.caption("ℹ️ Todas estas métricas alimentan automáticamente el motor de IA de Retail Pulse para generar la narrativa del Dictamen Ejecutivo del PDF.")
+
+# ------------------------------------------------------------
+# FOOTER (Optimizado con contraste Multi-Tema)
 # ------------------------------------------------------------
 st.markdown("---")
-st.caption("Desarrollado con ❤️ · Demo interactiva con Square Sandbox")
+st.markdown("""
+<div style="text-align: center; font-size: 0.9rem; color: #64748b;">
+    Desarrollado por <strong style="color: #f59e0b;">Jose Luis Asenjo</strong> · 
+    <a href="mailto:asenjo.jose@hotmail.com" style="color: #38bdf8; text-decoration: none; font-weight: 500;">asenjo.jose@hotmail.com</a>
+</div>
+""", unsafe_allow_html=True)
