@@ -6,7 +6,6 @@ import streamlit as st
 import plotly.express as px
 from datetime import datetime, timedelta
 import square
-from square.http.auth import BearerAuth
 from square import ApiException
 import re
 
