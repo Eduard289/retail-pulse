@@ -540,7 +540,7 @@ with st.expander("ℹ️ Información KPIs / Auditoría KPIs (clic para consulta
         * **Antigüedad Media del Stock:** Edad promedio del inventario expresada en meses. Picos elevados advierten de mercancía obsoleta de lenta rotación (*Dead Stock*).
         """)
         
-    st.caption("ℹ️ Todas estas métricas alimentan automáticamente el motor de IA de Retail Pulse para generar la narrativa del Dictamen Ejecutivo del PDF.")
+    st.caption("ℹ️ La calibración óptima de un sistema de indicadores exige un análisis bidimensional: correlacionar la taxonomía del sector con el ciclo de vida de la empresa para ponderar dinámicamente sus variables críticas")
 
 # ------------------------------------------------------------
 # FOOTER (Optimizado con contraste Multi-Tema)
