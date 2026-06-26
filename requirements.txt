@@ -5,3 +5,4 @@ plotly>=5.15.0
 squareup>=35.0.0
 python-dotenv>=1.0.0
 reportlab>=4.0.0
+
