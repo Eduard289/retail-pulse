@@ -284,7 +284,7 @@ def generar_pdf_simple(resultado, fecha_inicio, fecha_fin, cliente="Demo"):
 # ------------------------------------------------------------
 st.markdown("""
 # 📊 Retail Pulse – Analítica de Ventas en Tiempo Real
-_Demo interactiva con conexión a Square Sandbox_
+_Demo interactiva con conexión a Square Sandbox_  Motor de analítica retail con integración transaccional Live-Data vía API REST
 """)
 
 # Sidebar: Configuración
