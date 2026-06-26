@@ -1,3 +1,4 @@
+
 import os
 import io
 import pandas as pd
@@ -6,6 +7,7 @@ import streamlit as st
 import plotly.express as px
 from datetime import datetime, timedelta
 import re
+import textwrap  # <--- AÑADIDO PARA EVITAR EL BUG DE INDENTACIÓN DE STREAMLIT
 
 # ------------------------------------------------------------
 # IMPORTACIÓN ROBUSTA DE SQUARE (compatible con versiones 35.x y 44.x)
@@ -47,7 +49,7 @@ st.markdown("""
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0,0,0,0.7);
+        background: rgba(0,0,0,0.75);
         z-index: 9999;
         display: flex;
         align-items: center;
@@ -410,7 +412,7 @@ def generar_pdf_simple(resultado, fecha_inicio, fecha_fin, cliente="Demo"):
 # FUNCIÓN PARA GENERAR EL CONTENIDO DEL MODAL (INFOGRAFÍA)
 # ------------------------------------------------------------
 def get_metricas_html():
-    return """
+    return textwrap.dedent("""
     <h2>📊 MODELO DE ANÁLISIS AVANZADO</h2>
     <p style="text-align:center; color:#94a3b8; font-size:1.05rem;">
         Retail Pulse v1.0 · Arquitectura modular y versátil
@@ -508,18 +510,18 @@ def get_metricas_html():
         </p>
     </div>
     <div style="text-align:center; margin-top:1.5rem;">
-        <button class="close-btn" onclick="parent.document.querySelector('.modal-overlay').style.display='none'">✕ Cerrar</button>
+        <button class="close-btn" onclick="document.getElementById('modal-overlay').style.display='none';">✕ Cerrar</button>
     </div>
     <div class="footer-note">
         Este modelo es parte de la suite Retail Pulse · Desarrollado para ofrecer análisis profundos y accionables en el sector retail.
     </div>
-    """
+    """)
+
 
 # ------------------------------------------------------------
 # INTERFAZ PRINCIPAL DE STREAMLIT
 # ------------------------------------------------------------
 
-# Título y botón de métricas (en la misma fila)
 col_titulo, col_boton = st.columns([4, 1])
 with col_titulo:
     st.markdown("""
@@ -527,37 +529,29 @@ with col_titulo:
     _Demo interactiva con conexión a Square Sandbox · Datos actualizados al instante_
     """)
 with col_boton:
-    # Botón para abrir el modal
     if st.button("📊 Ver modelo y métricas", key="btn_metricas"):
         st.session_state['show_modal'] = True
 
-# Mostrar el modal si la variable de sesión está activa
 if st.session_state.get('show_modal', False):
-    # Inyectamos el HTML del modal con un overlay
-    st.markdown(f"""
+    modal_code = textwrap.dedent(f"""
     <div class="modal-overlay" id="modal-overlay">
         <div class="modal-content">
             {get_metricas_html()}
         </div>
     </div>
     <script>
-        // Cerrar el modal al hacer clic fuera del contenido
-        document.getElementById('modal-overlay').addEventListener('click', function(e) {{
-            if (e.target === this) {{
-                this.style.display = 'none';
-                // También debemos resetear la variable de sesión en Streamlit
-                // Para ello, redirigimos a la misma página con un parámetro
-                window.location.href = window.location.pathname + '?close_modal=true';
-            }}
-        }});
-        // Si la URL tiene ?close_modal=true, recargamos sin el parámetro
-        if (window.location.search.includes('close_modal=true')) {{
-            window.location.href = window.location.pathname;
+        const overlay = document.getElementById('modal-overlay');
+        if (overlay) {{
+            overlay.addEventListener('click', function(e) {{
+                if (e.target === this) {{
+                    this.style.display = 'none';
+                }}
+            }});
         }}
     </script>
-    """, unsafe_allow_html=True)
-    # Resetear la variable de sesión para que no se muestre al recargar
-    # (se hará con el script de redirección)
+    """)
+    st.markdown(modal_code, unsafe_allow_html=True)
+
 
 # Sidebar: Configuración
 with st.sidebar:
@@ -575,7 +569,8 @@ with st.sidebar:
     with col2:
         fecha_fin = st.date_input("Fecha fin", datetime.now().date())
     
-    if st.button("🔄 Sincronizar con Square", type="primary", width='stretch'):
+    if st.button("🔄 Sincronizar con Square", type="primary", use_container_width=True):
+        st.session_state['show_modal'] = False  # Limpiamos modal
         with st.spinner("Obteniendo datos de Square..."):
             df, mensaje = obtener_datos_square(fecha_inicio, fecha_fin)
             if not df.empty:
@@ -587,7 +582,8 @@ with st.sidebar:
             else:
                 st.error(f"❌ {mensaje}")
     
-    if st.button("📊 Cargar datos de demostración", width='stretch'):
+    if st.button("📊 Cargar datos de demostración", use_container_width=True):
+        st.session_state['show_modal'] = False  # Limpiamos modal
         df, mensaje = generar_datos_demo(fecha_inicio, fecha_fin)
         if not df.empty:
             st.session_state['df'] = df
@@ -706,15 +702,16 @@ if 'df' in st.session_state and not st.session_state['df'].empty:
 else:
     st.info("ℹ️ No hay datos cargados. Usa el panel de la izquierda para sincronizar con Square o cargar datos de demostración.")
 
+
 # ------------------------------------------------------------
-# FOOTER (actualizado)
+# FOOTER (Corregido para visibilidad Multi-Tema)
 # ------------------------------------------------------------
 st.markdown("---")
 st.markdown(
     """
-    <div style="text-align: center; color: #94a3b8; font-size: 0.9rem;">
-        Desarrollado por <strong style="color: #f8fafc;">Jose Luis Asenjo</strong> · 
-        <a href="mailto:asenjo.jose@hotmail.com" style="color: #94a3b8; text-decoration: none;">asenjo.jose@hotmail.com</a>
+    <div style="text-align: center; font-size: 0.9rem; color: #64748b;">
+        Desarrollado por <strong style="color: #f59e0b;">Jose Luis Asenjo</strong> · 
+        <a href="mailto:asenjo.jose@hotmail.com" style="color: #38bdf8; text-decoration: none; font-weight: 500;">asenjo.jose@hotmail.com</a>
     </div>
     """,
     unsafe_allow_html=True
