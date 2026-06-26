@@ -283,8 +283,9 @@ def generar_pdf_simple(resultado, fecha_inicio, fecha_fin, cliente="Demo"):
 # INTERFAZ PRINCIPAL DE STREAMLIT
 # ------------------------------------------------------------
 st.markdown("""
-# 📊 Retail Pulse – Analítica de Ventas en Tiempo Real
-_Demo interactiva con conexión a Square Sandbox_  Motor de analítica retail con integración transaccional Live-Data vía API REST Inteligencia Operativa para Retail: Toma de decisiones en caliente para proteger el margen de cada turno
+#  Retail Pulse – Analítica de ventas en tiempo real
+_Demo interactiva con conexión a Square Sandbox_ 
+Motor de analítica retail con integración transaccional Live-Data vía API REST Inteligencia Operativa para Retail: Toma de decisiones en caliente para proteger el margen de cada turno
 """)
 
 # Sidebar: Configuración
