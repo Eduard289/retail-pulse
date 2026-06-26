@@ -1,4 +1,3 @@
-
 import os
 import io
 import pandas as pd
@@ -7,7 +6,7 @@ import streamlit as st
 import plotly.express as px
 from datetime import datetime, timedelta
 import re
-import textwrap  # <--- AÑADIDO PARA EVITAR EL BUG DE INDENTACIÓN DE STREAMLIT
+import textwrap
 
 # ------------------------------------------------------------
 # IMPORTACIÓN ROBUSTA DE SQUARE (compatible con versiones 35.x y 44.x)
@@ -38,150 +37,18 @@ st.set_page_config(
 )
 
 # ------------------------------------------------------------
-# CSS PARA EL MODAL
+# CSS LIMPIO (Solo clases para las tarjetas internas)
 # ------------------------------------------------------------
 st.markdown("""
 <style>
-    /* Fondo del modal (overlay) */
-    .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.75);
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-    }
-    /* Contenido del modal */
-    .modal-content {
-        background: #111827;
-        color: #f8fafc;
-        border: 1px solid #1e293b;
-        border-radius: 16px;
-        max-width: 900px;
-        width: 100%;
-        max-height: 85vh;
-        overflow-y: auto;
-        padding: 2rem 2rem 1.5rem 2rem;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.8);
-        font-family: 'Georgia', 'Cardo', serif;
-        position: relative;
-    }
-    .modal-content h2 {
-        color: #f59e0b;
-        text-align: center;
-        font-size: 1.8rem;
-        border-bottom: 2px solid #f59e0b33;
-        padding-bottom: 0.8rem;
-        margin-bottom: 1.5rem;
-    }
-    .modal-content h3 {
-        color: #38bdf8;
-        font-size: 1.2rem;
-        margin-top: 1.8rem;
-        border-left: 4px solid #38bdf8;
-        padding-left: 0.8rem;
-    }
-    .modal-content .badge {
-        display: inline-block;
-        background: #1e293b;
-        color: #94a3b8;
-        font-size: 0.65rem;
-        padding: 0.1rem 0.6rem;
-        border-radius: 12px;
-        border: 1px solid #334155;
-        margin-left: 0.5rem;
-    }
-    .modal-content .metric-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 0.8rem;
-        margin: 1rem 0;
-    }
-    .modal-content .metric-card {
-        background: #0f172a;
-        border: 1px solid #1e293b;
-        border-radius: 10px;
-        padding: 0.8rem 1rem;
-    }
-    .modal-content .metric-card:hover {
-        border-color: #f59e0b;
-        background: #1a2332;
-    }
-    .modal-content .metric-name {
-        font-weight: 700;
-        color: #f8fafc;
-        font-size: 0.95rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .modal-content .metric-def {
-        color: #94a3b8;
-        font-size: 0.8rem;
-        margin: 0.2rem 0;
-    }
-    .modal-content .metric-util {
-        color: #a5b4fc;
-        font-size: 0.75rem;
-        border-top: 1px solid #1e293b;
-        padding-top: 0.3rem;
-        margin-top: 0.3rem;
-    }
-    .modal-content .close-btn {
-        background: #f59e0b;
-        color: #0b0f19;
-        font-weight: bold;
-        border: none;
-        padding: 0.6rem 2rem;
-        border-radius: 30px;
-        font-size: 0.9rem;
-        cursor: pointer;
-        margin-top: 1.5rem;
-        display: inline-block;
-    }
-    .modal-content .close-btn:hover {
-        background: #d97706;
-    }
-    .modal-content .footer-note {
-        color: #64748b;
-        font-size: 0.8rem;
-        text-align: center;
-        margin-top: 2rem;
-        border-top: 1px solid #1e293b;
-        padding-top: 1.2rem;
-    }
-    .btn-metricas {
-        background: #f59e0b;
-        color: #0b0f19;
-        padding: 0.4rem 1.2rem;
-        border-radius: 30px;
-        font-weight: bold;
-        font-size: 0.85rem;
-        border: none;
-        cursor: pointer;
-        transition: background 0.2s;
-        display: inline-block;
-    }
-    .btn-metricas:hover {
-        background: #d97706;
-    }
-    /* Scrollbar */
-    .modal-content::-webkit-scrollbar {
-        width: 6px;
-    }
-    .modal-content::-webkit-scrollbar-track {
-        background: #1e293b;
-        border-radius: 10px;
-    }
-    .modal-content::-webkit-scrollbar-thumb {
-        background: #f59e0b;
-        border-radius: 10px;
-    }
+    .metric-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.8rem; margin: 1rem 0; font-family: 'Georgia', serif; }
+    .metric-card { background: #0f172a; border: 1px solid #1e293b; border-radius: 10px; padding: 0.8rem 1rem; }
+    .metric-card:hover { border-color: #f59e0b; background: #1a2332; }
+    .metric-name { font-weight: 700; color: #f8fafc; font-size: 0.95rem; display: flex; justify-content: space-between; align-items: center; }
+    .metric-def { color: #94a3b8; font-size: 0.8rem; margin: 0.2rem 0; }
+    .metric-util { color: #a5b4fc; font-size: 0.75rem; border-top: 1px solid #1e293b; padding-top: 0.3rem; margin-top: 0.3rem; }
+    .badge { display: inline-block; background: #1e293b; color: #94a3b8; font-size: 0.65rem; padding: 0.1rem 0.6rem; border-radius: 12px; border: 1px solid #334155; margin-left: 0.5rem; }
+    .footer-note { color: #64748b; font-size: 0.8rem; text-align: center; margin-top: 2rem; border-top: 1px solid #1e293b; padding-top: 1.2rem; font-family: sans-serif; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -229,19 +96,13 @@ def obtener_datos_square(fecha_inicio, fecha_fin):
         return generar_datos_demo(fecha_inicio, fecha_fin)
     
     try:
-        client = Client(
-            access_token=token,
-            environment="sandbox"
-        )
+        client = Client(access_token=token, environment="sandbox")
         start_str = fecha_inicio.strftime("%Y-%m-%dT00:00:00Z")
         end_str = fecha_fin.strftime("%Y-%m-%dT23:59:59Z")
         
         with st.spinner("🔄 Obteniendo datos de Square..."):
             result = client.orders.list_orders(
-                location_id="main",
-                begin_time=start_str,
-                end_time=end_str,
-                limit=200
+                location_id="main", begin_time=start_str, end_time=end_str, limit=200
             )
             orders = result.body.get('orders', [])
             if not orders:
@@ -260,24 +121,12 @@ def obtener_datos_square(fecha_inicio, fecha_fin):
                             vendedor = tender['employee_id']
                             break
                 
-                unidades = 0
-                for item in order.get('line_items', []):
-                    unidades += int(item.get('quantity', 0))
-                
-                transacciones = 1
-                horas_trabajadas = 1.0
-                trafico_tienda = 50
-                coste_hora = 12.50
+                unidades = sum(int(item.get('quantity', 0)) for item in order.get('line_items', []))
                 
                 datos.append({
-                    "Fecha": fecha,
-                    "Vendedor_ID": vendedor,
-                    "Ventas": amount,
-                    "Transacciones": transacciones,
-                    "Unidades": unidades,
-                    "Horas_Trabajadas": horas_trabajadas,
-                    "Trafico_Tienda": trafico_tienda,
-                    "Coste_Hora": coste_hora
+                    "Fecha": fecha, "Vendedor_ID": vendedor, "Ventas": amount,
+                    "Transacciones": 1, "Unidades": unidades, "Horas_Trabajadas": 1.0,
+                    "Trafico_Tienda": 50, "Coste_Hora": 12.50
                 })
             
             df = pd.DataFrame(datos)
@@ -285,7 +134,7 @@ def obtener_datos_square(fecha_inicio, fecha_fin):
                 return generar_datos_demo(fecha_inicio, fecha_fin)
             return df, "Datos obtenidos correctamente desde Square"
             
-    except Exception as e:
+    except Exception:
         return generar_datos_demo(fecha_inicio, fecha_fin)
 
 def generar_datos_demo(fecha_inicio, fecha_fin):
@@ -301,52 +150,29 @@ def generar_datos_demo(fecha_inicio, fecha_fin):
             num_vendedores = np.random.randint(2, 5)
             vendedores_turno = np.random.choice(vendedores, num_vendedores, replace=False)
             
-            es_fin_semana = dt.weekday() >= 5
-            es_pico = (hora >= 17 and hora <= 20) and es_fin_semana
+            es_pico = (hora >= 17 and hora <= 20) and (dt.weekday() >= 5)
             es_valle = (hora <= 13) and (dt.weekday() <= 2)
             
-            if es_pico:
-                trafico = np.random.randint(100, 160)
-                conv_rate = np.random.uniform(0.25, 0.32)
-            elif es_valle:
-                trafico = np.random.randint(8, 20)
-                conv_rate = np.random.uniform(0.40, 0.55)
-            else:
-                trafico = np.random.randint(30, 70)
-                conv_rate = np.random.uniform(0.32, 0.42)
+            trafico = np.random.randint(100, 160) if es_pico else (np.random.randint(8, 20) if es_valle else np.random.randint(30, 70))
+            conv_rate = np.random.uniform(0.25, 0.32) if es_pico else (np.random.uniform(0.40, 0.55) if es_valle else np.random.uniform(0.32, 0.42))
             
             trans_totales = max(1, int(trafico * conv_rate))
             trans_por_v = max(1, trans_totales // num_vendedores)
             
             for v in vendedores_turno:
-                if "Asesor" in v:
-                    aov_base = 48; u_base = 2.9
-                elif "Senior" in v:
-                    aov_base = 36; u_base = 2.2
-                elif "Cajero" in v:
-                    aov_base = 22; u_base = 1.2
-                elif "Practicante" in v:
-                    aov_base = 18; u_base = 1.1
-                else:
-                    aov_base = 20; u_base = 1.3
-                
+                aov_base, u_base = (48, 2.9) if "Asesor" in v else ((36, 2.2) if "Senior" in v else ((22, 1.2) if "Cajero" in v else ((18, 1.1) if "Practicante" in v else (20, 1.3))))
                 trans = max(1, int(trans_por_v * np.random.uniform(0.7, 1.3)))
-                ventas = round(trans * aov_base * np.random.uniform(0.9, 1.1), 2)
-                unidades = max(trans, int(trans * u_base * np.random.uniform(0.9, 1.1)))
                 
                 datos.append({
-                    "Fecha": dt,
-                    "Vendedor_ID": v,
-                    "Ventas": ventas,
+                    "Fecha": dt, "Vendedor_ID": v,
+                    "Ventas": round(trans * aov_base * np.random.uniform(0.9, 1.1), 2),
                     "Transacciones": trans,
-                    "Unidades": unidades,
+                    "Unidades": max(trans, int(trans * u_base * np.random.uniform(0.9, 1.1))),
                     "Horas_Trabajadas": round(1.0 / num_vendedores, 2),
-                    "Trafico_Tienda": trafico,
-                    "Coste_Hora": 12.50
+                    "Trafico_Tienda": trafico, "Coste_Hora": 12.50
                 })
     
-    df = pd.DataFrame(datos)
-    return df, "Datos de demostración generados"
+    return pd.DataFrame(datos), "Datos de demostración generados"
 
 # ------------------------------------------------------------
 # FUNCIÓN PARA GENERAR PDF (BÁSICO)
@@ -362,13 +188,13 @@ def generar_pdf_simple(resultado, fecha_inicio, fecha_fin, cliente="Demo"):
         pdf_buffer = io.BytesIO()
         doc = SimpleDocTemplate(pdf_buffer, pagesize=A4)
         styles = getSampleStyleSheet()
-        story = []
-        
-        story.append(Paragraph("INFORME DE AUDITORÍA – RETAIL PULSE", styles['Title']))
-        story.append(Spacer(1, 0.5*cm))
-        story.append(Paragraph(f"Cliente: {cliente}", styles['Normal']))
-        story.append(Paragraph(f"Período: {fecha_inicio.strftime('%d/%m/%Y')} al {fecha_fin.strftime('%d/%m/%Y')}", styles['Normal']))
-        story.append(Spacer(1, 0.5*cm))
+        story = [
+            Paragraph("INFORME DE AUDITORÍA – RETAIL PULSE", styles['Title']),
+            Spacer(1, 0.5*cm),
+            Paragraph(f"Cliente: {cliente}", styles['Normal']),
+            Paragraph(f"Período: {fecha_inicio.strftime('%d/%m/%Y')} al {fecha_fin.strftime('%d/%m/%Y')}", styles['Normal']),
+            Spacer(1, 0.5*cm)
+        ]
         
         kpi_data = [
             ["Métrica", "Valor"],
@@ -383,23 +209,22 @@ def generar_pdf_simple(resultado, fecha_inicio, fecha_fin, cliente="Demo"):
         ]
         t = Table(kpi_data, colWidths=[5*cm, 5*cm])
         t.setStyle(TableStyle([
-            ('BACKGROUND', (0,0), (-1,0), colors.grey),
-            ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
-            ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
-            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('BACKGROUND', (0,0), (-1,0), colors.grey), ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.grey), ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
             ('ALIGN', (1,1), (1,-1), 'RIGHT'),
         ]))
-        story.append(t)
-        story.append(Spacer(1, 0.5*cm))
+        story.extend([t, Spacer(1, 0.5*cm)])
         
         vendedores = resultado.get('vendedores', [])
         if vendedores:
             story.append(Paragraph("Dictamen por Vendedor", styles['Heading2']))
             for v in vendedores[:3]:
-                story.append(Paragraph(f"<b>{v['id']}</b> – {v['cuadrante']}", styles['Normal']))
-                story.append(Paragraph(f"VPH: {v['vph']} €/h | AOV: {v['aov']} € | UPT: {v['upt']}", styles['Normal']))
-                story.append(Paragraph(f"<b>Recomendación:</b> {v['recomendacion']}", styles['Normal']))
-                story.append(Spacer(1, 0.3*cm))
+                story.extend([
+                    Paragraph(f"<b>{v['id']}</b> – {v['cuadrante']}", styles['Normal']),
+                    Paragraph(f"VPH: {v['vph']} €/h | AOV: {v['aov']} € | UPT: {v['upt']}", styles['Normal']),
+                    Paragraph(f"<b>Recomendación:</b> {v['recomendacion']}", styles['Normal']),
+                    Spacer(1, 0.3*cm)
+                ])
         
         doc.build(story)
         pdf_buffer.seek(0)
@@ -409,119 +234,72 @@ def generar_pdf_simple(resultado, fecha_inicio, fecha_fin, cliente="Demo"):
         return None
 
 # ------------------------------------------------------------
-# FUNCIÓN PARA GENERAR EL CONTENIDO DEL MODAL (INFOGRAFÍA)
+# MAQUETACIÓN HTML INTERNA DEL DIÁLOGO
 # ------------------------------------------------------------
 def get_metricas_html():
     return textwrap.dedent("""
-    <h2>📊 MODELO DE ANÁLISIS AVANZADO</h2>
-    <p style="text-align:center; color:#94a3b8; font-size:1.05rem;">
+    <p style="text-align:center; color:#94a3b8; font-size:1.05rem; margin-top:-10px;">
         Retail Pulse v1.0 · Arquitectura modular y versátil
     </p>
     
     <div style="background:#1a2332; border-left:6px solid #f59e0b; padding:1rem 1.5rem; border-radius:10px; margin:1.5rem 0;">
-        <p><strong>⚡ Versatilidad del modelo</strong></p>
-        <p style="color:#d1d5db; font-size:0.95rem;">
-            Este motor de análisis está diseñado para adaptarse a <strong>cualquier sector retail, tipo de negocio o departamento</strong> (ventas, RRHH, operaciones, etc.).
-            Se puede personalizar mediante la selección de <strong>benchmarks sectoriales</strong> y la configuración de <strong>parámetros propios</strong>.
-            Es aplicable a tiendas físicas, e-commerce, equipos comerciales, y cualquier entorno donde se quiera medir la eficiencia y productividad de la fuerza de ventas.
+        <p style="margin:0;"><strong>⚡ Versatilidad del modelo</strong></p>
+        <p style="color:#d1d5db; font-size:0.95rem; margin-top:0.5rem; margin-bottom:0;">
+            Este motor de análisis está diseñado para adaptarse a <strong>cualquier sector retail, tipo de negocio o departamento</strong> (ventas, RRHH, operaciones, etc.). Se puede personalizar mediante la selección de benchmarks sectoriales y parámetros propios.
         </p>
     </div>
     
-    <h3>📋 Estructura del Informe Generado</h3>
-    <ul style="color:#d1d5db; font-size:0.95rem; line-height:1.6; list-style-type:decimal; padding-left:1.5rem;">
+    <h3 style="color:#38bdf8; border-left:4px solid #38bdf8; padding-left:0.8rem;">📋 Estructura del Informe</h3>
+    <ul style="color:#d1d5db; font-size:0.95rem; line-height:1.6; padding-left:1.5rem;">
         <li><strong>Portada</strong> – Título, cliente, período analizado.</li>
         <li><strong>Resumen Global</strong> – Tabla con KPIs principales + comentario automático.</li>
-        <li><strong>Dictamen Individualizado por Vendedor</strong> – Lista de cada vendedor con métricas clave y recomendación. Incluye leyenda de perfiles.</li>
-        <li><strong>Informe Ejecutivo</strong> (narrativa personalizada):
-            <ul>
-                <li>3.1. Visión Global de la Tienda</li>
-                <li>3.2. Análisis de la Matriz de Calor y Patrones de Demanda</li>
-                <li>3.3. Rendimiento Individual por Vendedor (con apodos y comentarios)</li>
-                <li>3.4. Ineficiencia y Oportunidad Perdida</li>
-                <li>3.5. Gestión de Stock y Devoluciones</li>
-                <li>3.6. Benchmarking Sectorial (Nacional y, opcional, Regional)</li>
-                <li>3.7. Conclusiones Estratégicas y Plan de Acción</li>
-                <li>3.8. Proyección de Mejora</li>
-            </ul>
-        </li>
-        <li><strong>Contexto Regional</strong> (opcional) – Datos del entorno geográfico, marco laboral, digitalización, etc.</li>
-        <li><strong>Anexo: Gráficos</strong> – Barras VPH, evolución diaria, torta de distribución de ventas.</li>
+        <li><strong>Dictamen Individualizado por Vendedor</strong> – Lista con métricas clave y recomendación.</li>
+        <li><strong>Informe Ejecutivo</strong> (narrativa personalizada de 8 puntos clave).</li>
+        <li><strong>Anexo: Gráficos</strong> – Barras VPH, evolución diaria y distribución de ventas.</li>
     </ul>
 
-    <h3>📈 Métricas Empleadas (Definición y Utilidad)</h3>
-    <p style="color:#94a3b8;">Todas las métricas que se calculan y presentan en el informe, agrupadas por categorías.</p>
+    <h3 style="color:#38bdf8; border-left:4px solid #38bdf8; padding-left:0.8rem; margin-top:1.5rem;">📈 Métricas Empleadas</h3>
     
-    <h4>🌐 Métricas Globales</h4>
+    <h4 style="color:#f8fafc; margin-bottom:0.4rem;">🌐 Métricas Globales</h4>
     <div class="metric-grid">
-        <div class="metric-card"><div class="metric-name">Ventas Totales <span class="badge">Volumen</span></div><div class="metric-def">Facturación bruta acumulada.</div><div class="metric-util">🔹 Indica el tamaño del negocio.</div></div>
-        <div class="metric-card"><div class="metric-name">Transacciones <span class="badge">Actividad</span></div><div class="metric-def">Número de tickets/recibos emitidos.</div><div class="metric-util">🔹 Mide el volumen de operaciones.</div></div>
-        <div class="metric-card"><div class="metric-name">Tráfico Total <span class="badge">Afluencia</span></div><div class="metric-def">Número de visitas o pases registrados.</div><div class="metric-util">🔹 Base para calcular la conversión.</div></div>
-        <div class="metric-card"><div class="metric-name">Tasa de Conversión <span class="badge">Eficacia</span></div><div class="metric-def">(Transacciones / Tráfico) × 100.</div><div class="metric-util">🔹 Porcentaje de visitantes que compran.</div></div>
-        <div class="metric-card"><div class="metric-name">VPH <span class="badge">Productividad</span></div><div class="metric-def">Ventas totales / Horas trabajadas.</div><div class="metric-util">🔹 KPI principal de productividad laboral.</div></div>
-        <div class="metric-card"><div class="metric-name">AOV <span class="badge">Valor</span></div><div class="metric-def">Ventas totales / Transacciones.</div><div class="metric-util">🔹 Gasto promedio por compra.</div></div>
-        <div class="metric-card"><div class="metric-name">UPT <span class="badge">Cesta</span></div><div class="metric-def">Unidades totales / Transacciones.</div><div class="metric-util">🔹 Artículos por ticket (cross-selling).</div></div>
-        <div class="metric-card"><div class="metric-name">Coste Laboral % <span class="badge">Eficiencia</span></div><div class="metric-def">(Coste salarial / Ventas) × 100.</div><div class="metric-util">🔹 Peso de los salarios sobre la facturación.</div></div>
-        <div class="metric-card"><div class="metric-name">Impacto Ineficiencia <span class="badge">Fuga</span></div><div class="metric-def">(Idle Cost + COP) / Ventas × 100.</div><div class="metric-util">🔹 Ventas perdidas por mala gestión.</div></div>
-        <div class="metric-card"><div class="metric-name">Coste de Oportunidad <span class="badge">Pérdida</span></div><div class="metric-def">Clientes perdidos × AOV × Margen.</div><div class="metric-util">🔹 Ventas potenciales no realizadas en picos.</div></div>
-        <div class="metric-card"><div class="metric-name">Coste de Ocio <span class="badge">Sobrepersonal</span></div><div class="metric-def">Gasto salarial en horas de baja afluencia.</div><div class="metric-util">🔹 Indica exceso de personal en momentos de poco tráfico.</div></div>
-        <div class="metric-card"><div class="metric-name">Clientes Perdidos <span class="badge">Oportunidad</span></div><div class="metric-def">Estimación de clientes que no compraron en picos.</div><div class="metric-util">🔹 Cuantifica la pérdida real de negocio.</div></div>
-        <div class="metric-card"><div class="metric-name">Ratio Staff-Tráfico <span class="badge">Cobertura</span></div><div class="metric-def">Tráfico en picos / Horas trabajadas en picos.</div><div class="metric-util">🔹 Clientes por empleado en horas punta.</div></div>
-        <div class="metric-card"><div class="metric-name">Déficit de horas en picos <span class="badge">Staffing</span></div><div class="metric-def">(Tráfico pico / Traf_opt_empleado) - Horas pico reales.</div><div class="metric-util">🔹 Horas de personal que faltaron para cubrir la demanda.</div></div>
-        <div class="metric-card"><div class="metric-name">Margen Bruto aplicado <span class="badge">COP</span></div><div class="metric-def">Porcentaje de margen usado para calcular el COP.</div><div class="metric-util">🔹 Ajustable por el usuario.</div></div>
-        <div class="metric-card"><div class="metric-name">Rotación de Stock <span class="badge">Inventario</span></div><div class="metric-def">Ventas (€) / Stock promedio (unidades).</div><div class="metric-util">🔹 Frecuencia de renovación del inventario en valor.</div></div>
+        <div class="metric-card"><div class="metric-name">Ventas Totales <span class="badge">Volumen</span></div><div class="metric-def">Facturación bruta acumulada.</div><div class="metric-util">🔹 Tamaño del negocio.</div></div>
+        <div class="metric-card"><div class="metric-name">Transacciones <span class="badge">Actividad</span></div><div class="metric-def">Número de tickets emitidos.</div><div class="metric-util">🔹 Volumen de operaciones.</div></div>
+        <div class="metric-card"><div class="metric-name">Tráfico Total <span class="badge">Afluencia</span></div><div class="metric-def">Visitas o pases registrados.</div><div class="metric-util">🔹 Base para conversión.</div></div>
+        <div class="metric-card"><div class="metric-name">Tasa Conversión <span class="badge">Eficacia</span></div><div class="metric-def">(Transacciones / Tráfico) × 100.</div><div class="metric-util">🔹 % de compra real.</div></div>
+        <div class="metric-card"><div class="metric-name">VPH <span class="badge">Productividad</span></div><div class="metric-def">Ventas / Horas trabajadas.</div><div class="metric-util">🔹 KPI rey laboral.</div></div>
+        <div class="metric-card"><div class="metric-name">AOV <span class="badge">Valor</span></div><div class="metric-def">Ventas / Transacciones.</div><div class="metric-util">🔹 Gasto medio por ticket.</div></div>
+        <div class="metric-card"><div class="metric-name">UPT <span class="badge">Cesta</span></div><div class="metric-def">Unidades / Transacciones.</div><div class="metric-util">🔹 Venta cruzada.</div></div>
+        <div class="metric-card"><div class="metric-name">Coste Laboral % <span class="badge">Eficiencia</span></div><div class="metric-def">(Coste salarial / Ventas) × 100.</div><div class="metric-util">🔹 Peso de nóminas.</div></div>
     </div>
 
-    <h4>👤 Métricas por Vendedor</h4>
+    <h4 style="color:#f8fafc; margin-bottom:0.4rem; margin-top:1.2rem;">👤 Métricas por Vendedor</h4>
     <div class="metric-grid">
-        <div class="metric-card"><div class="metric-name">VPH individual <span class="badge">Productividad</span></div><div class="metric-def">Ventas del vendedor / Horas del vendedor.</div><div class="metric-util">🔹 Compara productividad individual.</div></div>
-        <div class="metric-card"><div class="metric-name">AOV individual <span class="badge">Valor</span></div><div class="metric-def">Ventas / Transacciones del vendedor.</div><div class="metric-util">🔹 Capacidad de generar tickets de alto valor.</div></div>
-        <div class="metric-card"><div class="metric-name">UPT individual <span class="badge">Cesta</span></div><div class="metric-def">Unidades / Transacciones del vendedor.</div><div class="metric-util">🔹 Habilidad de venta cruzada.</div></div>
-        <div class="metric-card"><div class="metric-name">Venta Neta <span class="badge">Real</span></div><div class="metric-def">Ventas brutas - Devoluciones.</div><div class="metric-util">🔹 Ingreso real después de devoluciones.</div></div>
-        <div class="metric-card"><div class="metric-name">Tasa de Retorno <span class="badge">Calidad</span></div><div class="metric-def">(Devoluciones / Ventas) × 100.</div><div class="metric-util">🔹 Porcentaje de productos devueltos.</div></div>
-        <div class="metric-card"><div class="metric-name">REP % <span class="badge">Eficiencia salarial</span></div><div class="metric-def">(Coste salarial / Ventas) × 100.</div><div class="metric-util">🔹 Peso del salario sobre su facturación.</div></div>
-        <div class="metric-card"><div class="metric-name">Sell-through <span class="badge">Rotación</span></div><div class="metric-def">(Unidades vendidas / Stock promedio) × 100.</div><div class="metric-util">🔹 Capacidad de mover inventario.</div></div>
-        <div class="metric-card"><div class="metric-name">Stress Ratio <span class="badge">Comportamiento</span></div><div class="metric-def">VPH en picos / VPH en valles.</div><div class="metric-util">🔹 Resiliencia bajo presión (>1,05 mejora; <0,85 colapsa).</div></div>
-        <div class="metric-card"><div class="metric-name">Fidelización <span class="badge">Lealtad</span></div><div class="metric-def">(Tickets socio / Transacciones) × 100.</div><div class="metric-util">🔹 Porcentaje de clientes recurrentes.</div></div>
-        <div class="metric-card"><div class="metric-name">Horas en Pico/Valle <span class="badge">Contexto</span></div><div class="metric-def">Distribución de horas en alta/baja afluencia.</div><div class="metric-util">🔹 Contextualiza el rendimiento.</div></div>
-        <div class="metric-card"><div class="metric-name">Peso Operativo <span class="badge">Carga</span></div><div class="metric-def">(Horas del vendedor / Horas totales) × 100.</div><div class="metric-util">🔹 Proporción de horas que aporta al equipo.</div></div>
-        <div class="metric-card"><div class="metric-name">Cuadrante Comercial <span class="badge">Perfil</span></div><div class="metric-def">Clasificación automática (ASESOR TOP, DESPACHADOR, etc.).</div><div class="metric-util">🔹 Resume perfil y sugiere acciones formativas.</div></div>
+        <div class="metric-card"><div class="metric-name">VPH individual <span class="badge">Productividad</span></div><div class="metric-def">Ventas / Horas del vendedor.</div><div class="metric-util">🔹 Productividad propia.</div></div>
+        <div class="metric-card"><div class="metric-name">Venta Neta <span class="badge">Real</span></div><div class="metric-def">Ventas brutas - Devoluciones.</div><div class="metric-util">🔹 Ingreso consolidado.</div></div>
+        <div class="metric-card"><div class="metric-name">Tasa de Retorno <span class="badge">Calidad</span></div><div class="metric-def">(Devoluciones / Ventas) × 100.</div><div class="metric-util">🔹 Calidad de venta.</div></div>
+        <div class="metric-card"><div class="metric-name">Stress Ratio <span class="badge">Presión</span></div><div class="metric-def">VPH en picos / VPH en valles.</div><div class="metric-util">🔹 Resiliencia en caos.</div></div>
+        <div class="metric-card"><div class="metric-name">Cuadrante <span class="badge">Perfil</span></div><div class="metric-def">Clasificación automática.</div><div class="metric-util">🔹 Asesor, Despachador...</div></div>
     </div>
 
-    <h4>📊 Benchmarking y Contexto Sectorial</h4>
-    <div class="metric-grid">
-        <div class="metric-card"><div class="metric-name">Benchmark Conversión <span class="badge">Sector</span></div><div class="metric-def">Conversión objetivo del sector (percentil 50).</div><div class="metric-util">🔹 Referencia para comparar.</div></div>
-        <div class="metric-card"><div class="metric-name">Benchmark AOV <span class="badge">Sector</span></div><div class="metric-def">Ticket medio objetivo del sector.</div><div class="metric-util">🔹 Referencia para evaluar ticket medio.</div></div>
-        <div class="metric-card"><div class="metric-name">Benchmark UPT <span class="badge">Sector</span></div><div class="metric-def">Unidades por ticket objetivo del sector.</div><div class="metric-util">🔹 Referencia para evaluar venta cruzada.</div></div>
-        <div class="metric-card"><div class="metric-name">Tráfico Óptimo/Empleado <span class="badge">Sector</span></div><div class="metric-def">Clientes que un empleado puede atender eficientemente.</div><div class="metric-util">🔹 Base para calcular déficit de horas.</div></div>
-        <div class="metric-card"><div class="metric-name">Diferencia vs Benchmark <span class="badge">Desviación</span></div><div class="metric-def">Desviación de la tienda respecto al sector.</div><div class="metric-util">🔹 Indica posición competitiva.</div></div>
-    </div>
-
-    <h4>📦 Stock y Devoluciones</h4>
-    <div class="metric-grid">
-        <div class="metric-card"><div class="metric-name">Devoluciones Totales <span class="badge">Calidad</span></div><div class="metric-def">Número total de productos devueltos.</div><div class="metric-util">🔹 Indicador de calidad y satisfacción.</div></div>
-        <div class="metric-card"><div class="metric-name">Stock Promedio <span class="badge">Inventario</span></div><div class="metric-def">Media de unidades de stock disponible.</div><div class="metric-util">🔹 Dimensiona el inventario.</div></div>
-        <div class="metric-card"><div class="metric-name">Antigüedad Media del Stock <span class="badge">Rotación</span></div><div class="metric-def">Edad media (en meses) del inventario.</div><div class="metric-util">🔹 Si es elevada, indica productos de lenta rotación.</div></div>
-    </div>
-
-    <div style="margin-top:1.5rem; background:#0f172a; border-radius:12px; padding:1rem; border:1px solid #1e293b;">
-        <p style="color:#d1d5db; text-align:center; font-size:0.9rem;">
-            El sistema calcula y presenta <strong>más de 40 métricas</strong> agrupadas en estas categorías. 
-            Todas ellas se utilizan en el informe para ofrecer un análisis completo y accionable de la fuerza de ventas.
-        </p>
-    </div>
-    <div style="text-align:center; margin-top:1.5rem;">
-        <button class="close-btn" onclick="document.getElementById('modal-overlay').style.display='none';">✕ Cerrar</button>
-    </div>
     <div class="footer-note">
-        Este modelo es parte de la suite Retail Pulse · Desarrollado para ofrecer análisis profundos y accionables en el sector retail.
+        Este modelo es parte de la suite Retail Pulse · Desarrollado para ofrecer análisis profundos.
     </div>
     """)
+
+# ------------------------------------------------------------
+# DECLARACIÓN DEL POPUP NATVO DE STREAMLIT
+# ------------------------------------------------------------
+@st.dialog("📊 MODELO DE ANÁLISIS AVANZADO", width="large")
+def abrir_modal_nativo():
+    st.markdown(get_metricas_html(), unsafe_allow_html=True)
+    st.write("") # Espaciador
+    if st.button("✕ Cerrar panel", use_container_width=True):
+        st.rerun()
 
 
 # ------------------------------------------------------------
 # INTERFAZ PRINCIPAL DE STREAMLIT
 # ------------------------------------------------------------
-
 col_titulo, col_boton = st.columns([4, 1])
 with col_titulo:
     st.markdown("""
@@ -529,39 +307,14 @@ with col_titulo:
     _Demo interactiva con conexión a Square Sandbox · Datos actualizados al instante_
     """)
 with col_boton:
+    # Llamamos directamente a la función decorada
     if st.button("📊 Ver modelo y métricas", key="btn_metricas"):
-        st.session_state['show_modal'] = True
-
-if st.session_state.get('show_modal', False):
-    modal_code = textwrap.dedent(f"""
-    <div class="modal-overlay" id="modal-overlay">
-        <div class="modal-content">
-            {get_metricas_html()}
-        </div>
-    </div>
-    <script>
-        const overlay = document.getElementById('modal-overlay');
-        if (overlay) {{
-            overlay.addEventListener('click', function(e) {{
-                if (e.target === this) {{
-                    this.style.display = 'none';
-                }}
-            }});
-        }}
-    </script>
-    """)
-    st.markdown(modal_code, unsafe_allow_html=True)
-
+        abrir_modal_nativo()
 
 # Sidebar: Configuración
 with st.sidebar:
     st.header("⚙️ Configuración")
-    
-    sector_key = st.selectbox(
-        "Sector de negocio",
-        options=list(BENCHMARK_SECTORES.keys()),
-        format_func=lambda x: BENCHMARK_SECTORES[x]['nombre']
-    )
+    sector_key = st.selectbox("Sector de negocio", options=list(BENCHMARK_SECTORES.keys()), format_func=lambda x: BENCHMARK_SECTORES[x]['nombre'])
     
     col1, col2 = st.columns(2)
     with col1:
@@ -570,149 +323,80 @@ with st.sidebar:
         fecha_fin = st.date_input("Fecha fin", datetime.now().date())
     
     if st.button("🔄 Sincronizar con Square", type="primary", use_container_width=True):
-        st.session_state['show_modal'] = False  # Limpiamos modal
         with st.spinner("Obteniendo datos de Square..."):
             df, mensaje = obtener_datos_square(fecha_inicio, fecha_fin)
             if not df.empty:
-                st.session_state['df'] = df
-                st.session_state['sector'] = sector_key
-                st.session_state['fecha_inicio'] = fecha_inicio
-                st.session_state['fecha_fin'] = fecha_fin
+                st.session_state['df'] = df; st.session_state['sector'] = sector_key
+                st.session_state['fecha_inicio'] = fecha_inicio; st.session_state['fecha_fin'] = fecha_fin
                 st.success(f"✅ {mensaje} ({len(df)} registros)")
             else:
                 st.error(f"❌ {mensaje}")
     
     if st.button("📊 Cargar datos de demostración", use_container_width=True):
-        st.session_state['show_modal'] = False  # Limpiamos modal
         df, mensaje = generar_datos_demo(fecha_inicio, fecha_fin)
         if not df.empty:
-            st.session_state['df'] = df
-            st.session_state['sector'] = sector_key
-            st.session_state['fecha_inicio'] = fecha_inicio
-            st.session_state['fecha_fin'] = fecha_fin
+            st.session_state['df'] = df; st.session_state['sector'] = sector_key
+            st.session_state['fecha_inicio'] = fecha_inicio; st.session_state['fecha_fin'] = fecha_fin
             st.success(f"✅ {mensaje} ({len(df)} registros)")
     
-    token = obtener_token_square()
-    if token:
-        st.success("✅ Token de Square configurado")
-    else:
-        st.info("ℹ️ Sin token de Square (se usarán datos de demostración)")
+    st.success("✅ Token de Square configurado") if obtener_token_square() else st.info("ℹ️ Sin token (Modo Demo)")
 
 # ------------------------------------------------------------
 # PROCESAMIENTO Y VISUALIZACIÓN DE DATOS
 # ------------------------------------------------------------
 if 'df' not in st.session_state:
-    fecha_inicio_def = datetime.now().date() - timedelta(days=7)
-    fecha_fin_def = datetime.now().date()
-    df_demo, _ = generar_datos_demo(fecha_inicio_def, fecha_fin_def)
-    st.session_state['df'] = df_demo
-    st.session_state['sector'] = 'textil'
-    st.session_state['fecha_inicio'] = fecha_inicio_def
-    st.session_state['fecha_fin'] = fecha_fin_def
+    f_ini, f_fin = datetime.now().date() - timedelta(days=7), datetime.now().date()
+    st.session_state['df'], _ = generar_datos_demo(f_ini, f_fin)
+    st.session_state['sector'] = 'textil'; st.session_state['fecha_inicio'] = f_ini; st.session_state['fecha_fin'] = f_fin
 
 if 'df' in st.session_state and not st.session_state['df'].empty:
     df = st.session_state['df']
-    sector_key = st.session_state.get('sector', 'textil')
-    fecha_inicio = st.session_state.get('fecha_inicio', datetime.now().date() - timedelta(days=7))
-    fecha_fin = st.session_state.get('fecha_fin', datetime.now().date())
-    
-    resultado = procesar_periodo(df, "PERIODO COMPLETO", sector_key=sector_key)
+    res = procesar_periodo(df, "PERIODO COMPLETO", sector_key=st.session_state.get('sector', 'textil'))
     
     st.subheader("📈 KPIs Principales")
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("💰 Ventas Totales", f"{resultado.get('tot_ventas', '0')} €")
-    with col2:
-        st.metric("🧾 Transacciones", resultado.get('tot_trans', '0'))
-    with col3:
-        st.metric("⚡ VPH", f"{resultado.get('vph_global', '0')} €/h")
-    with col4:
-        st.metric("🔄 Conversión", f"{resultado.get('tasa_conv', '0')}%")
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("💰 Ventas Totales", f"{res.get('tot_ventas', '0')} €")
+    c2.metric("🧾 Transacciones", res.get('tot_trans', '0'))
+    c3.metric("⚡ VPH", f"{res.get('vph_global', '0')} €/h")
+    c4.metric("🔄 Conversión", f"{res.get('tasa_conv', '0')}%")
     
-    col5, col6, col7, col8 = st.columns(4)
-    with col5:
-        st.metric("🛒 AOV", f"{resultado.get('aov_global', '0')} €")
-    with col6:
-        st.metric("📦 UPT", resultado.get('upt_global', '0'))
-    with col7:
-        st.metric("💸 Coste Laboral", f"{resultado.get('coste_lab_pct', '0')}%")
-    with col8:
-        st.metric("⚠️ Impacto Ineficiencia", f"{resultado.get('impacto_pct', '0')}%")
+    c5, c6, c7, c8 = st.columns(4)
+    c5.metric("🛒 AOV", f"{res.get('aov_global', '0')} €")
+    c6.metric("📦 UPT", res.get('upt_global', '0'))
+    c7.metric("💸 Coste Laboral", f"{res.get('coste_lab_pct', '0')}%")
+    c8.metric("⚠️ Impacto Ineficiencia", f"{res.get('impacto_pct', '0')}%")
     
     st.subheader("⚡ Productividad por Vendedor")
-    vendedores = resultado.get('vendedores', [])
+    vendedores = res.get('vendedores', [])
     if vendedores:
-        df_vph = pd.DataFrame([
-            {"Vendedor": v['id'], "VPH": v['vph'], "Cuadrante": v['cuadrante']}
-            for v in vendedores
-        ])
-        df_vph = df_vph.sort_values('VPH', ascending=False)
-        
-        fig = px.bar(
-            df_vph,
-            x="Vendedor",
-            y="VPH",
-            color="Cuadrante",
-            color_discrete_sequence=px.colors.qualitative.Set2,
-            title="VPH por Vendedor (€/h)",
-            text_auto=".1f"
-        )
-        media_vph = float(resultado.get('vph_global', 0))
-        fig.add_hline(
-            y=media_vph,
-            line_dash="dash",
-            line_color="red",
-            annotation_text=f"Media: {media_vph:.1f} €/h",
-            annotation_position="top right"
-        )
-        fig.update_layout(height=400, xaxis_title="", yaxis_title="VPH (€/h)", showlegend=True, legend_title="Cuadrante")
+        df_vph = pd.DataFrame([{"Vendedor": v['id'], "VPH": v['vph'], "Cuadrante": v['cuadrante']} for v in vendedores]).sort_values('VPH', ascending=False)
+        fig = px.bar(df_vph, x="Vendedor", y="VPH", color="Cuadrante", color_discrete_sequence=px.colors.qualitative.Set2, text_auto=".1f")
+        fig.add_hline(y=float(res.get('vph_global', 0)), line_dash="dash", line_color="red", annotation_text=f"Media: {float(res.get('vph_global', 0)):.1f} €/h")
+        fig.update_layout(height=400, xaxis_title="", yaxis_title="VPH (€/h)")
         st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.info("ℹ️ No hay datos de vendedores disponibles.")
     
-    with st.expander("👤 Dictamen de Vendedores (clic para desplegar)", expanded=False):
-        if vendedores:
-            for v in vendedores:
-                st.markdown(f"""
-                **{v['id']}** – {v['cuadrante']}
-                - VPH: {v['vph']} €/h | AOV: {v['aov']} € | UPT: {v['upt']}
-                - Venta Neta: {v['venta_neta']} € | Retorno: {v['retorno_pct']}%
-                - **Recomendación:** {v['recomendacion']}
-                ---
-                """)
-        else:
-            st.info("ℹ️ No hay dictamen disponible.")
+    with st.expander("👤 Dictamen de Vendedores (clic para desplegar)"):
+        for v in vendedores:
+            st.markdown(f"**{v['id']}** – {v['cuadrante']}\n- VPH: {v['vph']} €/h | AOV: {v['aov']} € | UPT: {v['upt']}\n- **Recomendación:** {v['recomendacion']}\n---") if vendedores else st.info("Sin datos.")
     
-    with st.expander("📋 Ver datos en bruto (DataFrame)", expanded=False):
+    with st.expander("📋 Ver datos en bruto (DataFrame)"):
         st.dataframe(df)
     
     col1, col2, col3 = st.columns([1, 1, 2])
     with col1:
-        nombre_cliente = st.text_input("Nombre del cliente", value="Demo")
+        n_cli = st.text_input("Nombre del cliente", value="Demo")
     with col2:
         if st.button("📥 Descargar PDF"):
-            pdf_buffer = generar_pdf_simple(resultado, fecha_inicio, fecha_fin, nombre_cliente)
-            if pdf_buffer:
-                st.download_button(
-                    label="📄 Descargar PDF",
-                    data=pdf_buffer,
-                    file_name=f"Retail_Pulse_{datetime.now().strftime('%Y%m%d')}.pdf",
-                    mime="application/pdf"
-                )
-else:
-    st.info("ℹ️ No hay datos cargados. Usa el panel de la izquierda para sincronizar con Square o cargar datos de demostración.")
-
+            if pdf_buf := generar_pdf_simple(res, st.session_state['fecha_inicio'], st.session_state['fecha_fin'], n_cli):
+                st.download_button("📄 Descargar archivo", data=pdf_buf, file_name="Retail_Pulse.pdf", mime="application/pdf")
 
 # ------------------------------------------------------------
-# FOOTER (Corregido para visibilidad Multi-Tema)
+# FOOTER MULTI-TEMA (Visible siempre)
 # ------------------------------------------------------------
 st.markdown("---")
-st.markdown(
-    """
-    <div style="text-align: center; font-size: 0.9rem; color: #64748b;">
-        Desarrollado por <strong style="color: #f59e0b;">Jose Luis Asenjo</strong> · 
-        <a href="mailto:asenjo.jose@hotmail.com" style="color: #38bdf8; text-decoration: none; font-weight: 500;">asenjo.jose@hotmail.com</a>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+st.markdown("""
+<div style="text-align: center; font-size: 0.9rem; color: #64748b;">
+    Desarrollado por <strong style="color: #f59e0b;">Jose Luis Asenjo</strong> · 
+    <a href="mailto:asenjo.jose@hotmail.com" style="color: #38bdf8; text-decoration: none; font-weight: 500;">asenjo.jose@hotmail.com</a>
+</div>
+""", unsafe_allow_html=True)
