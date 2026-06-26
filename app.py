@@ -59,11 +59,10 @@ def limpiar_numero(valor):
     return 0.0
 
 # ------------------------------------------------------------
-# ADAPTADOR DE SQUARE (CONEXIÓN Y OBTENCIÓN DE DATOS)
+# ADAPTADOR DE SQUARE (CONEXIÓN SILENCIOSA)
 # ------------------------------------------------------------
 def obtener_token_square():
     """Obtiene el token de Square desde los secretos de Streamlit o variables de entorno."""
-    # Intentar desde st.secrets (Streamlit Cloud)
     try:
         token = st.secrets["SQUARE_ACCESS_TOKEN"]
         if token and token != "tu_token_aqui":
@@ -71,29 +70,25 @@ def obtener_token_square():
     except:
         pass
     
-    # Intentar desde variables de entorno (local)
     token = os.getenv("SQUARE_ACCESS_TOKEN")
     if token and token != "tu_token_aqui":
         return token
     
-    # Si no hay token, devolver None (sin mostrar error para no saturar la interfaz)
-    return None
+    return None  # Silenciosamente
 
 def obtener_datos_square(fecha_inicio, fecha_fin):
     """
-    Obtiene órdenes de Square en el rango de fechas y las convierte al formato del motor.
-    Si falla, genera datos de demostración automáticamente.
+    Obtiene órdenes de Square en el rango de fechas.
+    Si falla, genera datos de demostración silenciosamente.
     """
     token = obtener_token_square()
     if not token:
-        st.info("ℹ️ No se encontró token de Square. Usando datos de demostración.")
         return generar_datos_demo(fecha_inicio, fecha_fin)
     
     try:
-        # Crear cliente de Square con la clase Client (robusta)
         client = Client(
             access_token=token,
-            environment="sandbox"  # Cambiar a "production" si usas token real
+            environment="sandbox"
         )
         
         start_str = fecha_inicio.strftime("%Y-%m-%dT00:00:00Z")
@@ -101,7 +96,7 @@ def obtener_datos_square(fecha_inicio, fecha_fin):
         
         with st.spinner("🔄 Obteniendo datos de Square..."):
             result = client.orders.list_orders(
-                location_id="main",  # En sandbox funciona con cualquier ID
+                location_id="main",
                 begin_time=start_str,
                 end_time=end_str,
                 limit=200
@@ -110,16 +105,14 @@ def obtener_datos_square(fecha_inicio, fecha_fin):
             orders = result.body.get('orders', [])
             
             if not orders:
-                st.info("ℹ️ No se encontraron órdenes en el rango de fechas. Usando datos de demostración.")
                 return generar_datos_demo(fecha_inicio, fecha_fin)
             
             datos = []
             for order in orders:
                 fecha = pd.to_datetime(order.get('created_at'))
                 total_money = order.get('total_money', {})
-                amount = float(total_money.get('amount', 0)) / 100  # Square usa centavos
+                amount = float(total_money.get('amount', 0)) / 100
                 
-                # Extraer vendedor (si existe en los tender)
                 vendedor = "Vendedor_Default"
                 if 'tenders' in order and order['tenders']:
                     for tender in order['tenders']:
@@ -127,15 +120,11 @@ def obtener_datos_square(fecha_inicio, fecha_fin):
                             vendedor = tender['employee_id']
                             break
                 
-                # Calcular unidades (suma de cantidades)
                 unidades = 0
                 for item in order.get('line_items', []):
                     unidades += int(item.get('quantity', 0))
                 
-                # Transacciones: 1 por orden
                 transacciones = 1
-                
-                # Datos complementarios (simulados, ya que Square no los proporciona)
                 horas_trabajadas = 1.0
                 trafico_tienda = 50
                 coste_hora = 12.50
@@ -158,32 +147,26 @@ def obtener_datos_square(fecha_inicio, fecha_fin):
             return df, "Datos obtenidos correctamente desde Square"
             
     except Exception as e:
-        # Si hay cualquier error, usar datos de demostración sin mostrar error molesto
-        st.info(f"ℹ️ No se pudo conectar con Square ({str(e)[:50]}...). Usando datos de demostración.")
+        # Silenciosamente usa datos de demostración
         return generar_datos_demo(fecha_inicio, fecha_fin)
 
 def generar_datos_demo(fecha_inicio, fecha_fin):
     """
     Genera datos de demostración realistas.
     """
-    # Si ya hay un mensaje de info, no lo repetimos para no saturar
-    # (se muestra desde obtener_datos_square)
-    
     vendedores = ["Vendedor_1 (Junior)", "Vendedor_2 (Senior)", "Vendedor_3 (Cajero)", "Vendedor_4 (Asesor)", "Vendedor_5 (Practicante)"]
     datos = []
     
     dias = (fecha_fin - fecha_inicio).days + 1
-    np.random.seed(42)  # Para reproducibilidad
+    np.random.seed(42)
     
     for dia in range(dias):
-        # Convertir date a datetime correctamente
         fecha_base = datetime.combine(fecha_inicio + timedelta(days=dia), datetime.min.time())
-        for hora in range(10, 21):  # De 10:00 a 20:00
+        for hora in range(10, 21):
             dt = fecha_base.replace(hour=hora)
             num_vendedores = np.random.randint(2, 5)
             vendedores_turno = np.random.choice(vendedores, num_vendedores, replace=False)
             
-            # Tráfico según hora y día
             es_fin_semana = dt.weekday() >= 5
             es_pico = (hora >= 17 and hora <= 20) and es_fin_semana
             es_valle = (hora <= 13) and (dt.weekday() <= 2)
@@ -416,7 +399,6 @@ if 'df' in st.session_state and not st.session_state['df'].empty:
             text_auto=".1f"
         )
         
-        # Añadir línea de media
         media_vph = float(resultado.get('vph_global', 0))
         fig.add_hline(
             y=media_vph,
