@@ -9,7 +9,7 @@ import square
 import re
 
 # ------------------------------------------------------------
-# CONFIGURACIÓN DE LA PÁGINA (DEBE SER LO PRIMERO)
+# CONFIGURACIÓN DE LA PÁGINA
 # ------------------------------------------------------------
 st.set_page_config(
     page_title="Retail Pulse - Analítica de Ventas",
@@ -19,12 +19,12 @@ st.set_page_config(
 )
 
 # ------------------------------------------------------------
-# IMPORTAR MOTOR DE KPIS (desde el mismo directorio)
+# IMPORTAR MOTOR DE KPIS
 # ------------------------------------------------------------
 try:
     from motor_kpis import procesar_periodo, validar_esquema_datos, BENCHMARK_SECTORES
 except ImportError:
-    st.error("❌ No se encuentra 'motor_kpis.py'. Asegúrate de que el archivo está en la misma carpeta.")
+    st.error("❌ No se encuentra 'motor_kpis.py'.")
     st.stop()
 
 # ------------------------------------------------------------
@@ -51,7 +51,7 @@ def limpiar_numero(valor):
     return 0.0
 
 # ------------------------------------------------------------
-# ADAPTADOR DE SQUARE (CONEXIÓN Y OBTENCIÓN DE DATOS)
+# ADAPTADOR DE SQUARE
 # ------------------------------------------------------------
 def obtener_token_square():
     try:
@@ -65,8 +65,8 @@ def obtener_token_square():
     if token and token != "tu_token_aqui":
         return token
     
-    st.error("❌ No se encontró el token de Square. Configúralo en 'Secrets' (Streamlit Cloud) o en un archivo .env (local).")
-    st.info("ℹ️ En Streamlit Cloud, añade un secreto llamado 'SQUARE_ACCESS_TOKEN' con el valor de tu token de sandbox.")
+    st.error("❌ No se encontró el token de Square.")
+    st.info("ℹ️ Añade un secreto 'SQUARE_ACCESS_TOKEN' en Streamlit Cloud.")
     return None
 
 def obtener_datos_square(fecha_inicio, fecha_fin):
@@ -75,6 +75,7 @@ def obtener_datos_square(fecha_inicio, fecha_fin):
         return pd.DataFrame(), "Token no configurado"
     
     try:
+        # Método alternativo de importación por si falla el cliente estándar
         client = square.Client(
             access_token=token,
             environment="sandbox"
@@ -94,7 +95,7 @@ def obtener_datos_square(fecha_inicio, fecha_fin):
             orders = result.body.get('orders', [])
             
             if not orders:
-                st.warning("⚠️ No se encontraron órdenes en el rango de fechas seleccionado.")
+                st.warning("⚠️ No se encontraron órdenes.")
                 return generar_datos_demo(fecha_inicio, fecha_fin)
             
             datos = []
@@ -137,10 +138,7 @@ def obtener_datos_square(fecha_inicio, fecha_fin):
             return df, "Datos obtenidos correctamente"
             
     except Exception as e:
-        error_msg = str(e)
-        if hasattr(e, 'body'):
-            error_msg = e.body
-        st.error(f"❌ Error al obtener datos: {error_msg}")
+        st.error(f"❌ Error al obtener datos: {str(e)}")
         return generar_datos_demo(fecha_inicio, fecha_fin)
 
 def generar_datos_demo(fecha_inicio, fecha_fin):
@@ -153,7 +151,8 @@ def generar_datos_demo(fecha_inicio, fecha_fin):
     np.random.seed(42)
     
     for dia in range(dias):
-        fecha_base = fecha_inicio + timedelta(days=dia)
+        # CORRECCIÓN: Convertir date a datetime
+        fecha_base = datetime.combine(fecha_inicio + timedelta(days=dia), datetime.min.time())
         for hora in range(10, 21):
             dt = fecha_base.replace(hour=hora)
             num_vendedores = np.random.randint(2, 5)
@@ -212,7 +211,7 @@ def generar_datos_demo(fecha_inicio, fecha_fin):
     return df, "Datos de demostración generados"
 
 # ------------------------------------------------------------
-# INTERFAZ PRINCIPAL DE STREAMLIT
+# INTERFAZ PRINCIPAL
 # ------------------------------------------------------------
 st.markdown("""
 # 📊 Retail Pulse – Analítica de Ventas en Tiempo Real
@@ -262,7 +261,7 @@ with st.sidebar:
         st.warning("⚠️ No se encontró token de Square")
 
 # ------------------------------------------------------------
-# PROCESAMIENTO Y VISUALIZACIÓN DE DATOS
+# PROCESAMIENTO Y VISUALIZACIÓN
 # ------------------------------------------------------------
 if 'df' in st.session_state and not st.session_state['df'].empty:
     df = st.session_state['df']
@@ -330,7 +329,7 @@ if 'df' in st.session_state and not st.session_state['df'].empty:
     else:
         st.info("ℹ️ No hay datos de vendedores disponibles.")
     
-    with st.expander("👤 Dictamen de Vendedores (clic para desplegar)", expanded=False):
+    with st.expander("👤 Dictamen de Vendedores", expanded=False):
         if vendedores:
             for v in vendedores:
                 st.markdown(f"""
